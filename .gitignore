@@ -20,9 +20,33 @@
 # production
 /build
 
+# turbopack
+.turbo
+
 # misc
 .DS_Store
+Thumbs.db
 *.pem
+
+# editor
+.vscode/
+.idea/
+
+# agent skills cache (fetched from skills-lock.json)
+/.agents/
+
+# claude code local runtime state — .claude/skills/ (project skills) is
+# still tracked; only the machine-local state files below are excluded
+.claude/scheduled_tasks.lock
+.claude/scheduled_tasks.json
+.claude/routines/.state/
+.claude/worktrees/
+.claude/checkpoints/
+.claude/mailbox/
+.claude/agent-registry.json
+.claude/agent-memory-local
+.claude/first-run
+.claude/assistant-daemon-state.json
 
 # debug
 npm-debug.log*
