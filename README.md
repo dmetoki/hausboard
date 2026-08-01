@@ -322,6 +322,32 @@ this component — but any *new* single-value chart should.
 />
 ```
 
+## Posts section — server-paginated data table
+
+`app/(app)/posts/page.tsx` is a second real section (alongside Brand
+Reputation), an 80/20 two-card layout (`md:col-span-4` / `md:col-span-1`,
+the second card intentionally empty today — reserved for a future ad-hoc
+filters panel). The 80% card holds `PostsTable`
+(`components/posts/posts-table.tsx`), built on `@tanstack/react-table` +
+`swr` over `components/ui/table.tsx` (shadcn's plain-`<table>` primitives —
+`Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`).
+
+**The swappable seam:** `fetchMockPosts` (`lib/mock-metrics.ts`) is written
+as a real `async` function taking the same query shape a real paginated
+endpoint would (`{ page, pageSize, sortBy, sortOrder, search }`) and
+returning `{ posts, totalCount }`, with a simulated delay so the loading
+state is genuinely exercised rather than resolving instantly. `PostsTable`
+uses `manualPagination`/`manualSorting` — it never sorts/slices data itself,
+it just asks `fetchMockPosts` for the page it wants. Swapping in a real
+backend later means replacing that one function; the table, columns, and
+`useSWR` wiring don't change.
+
+Column definitions live in `components/posts/columns.tsx`, which also
+defines `PostTableRow` — a posts-table-specific shape (adds `date` and a
+computed `engagement`) kept separate from the smaller shared `SocialPost`
+type `PostList`/the brand-reputation page use, so this table's needs don't
+leak into that simpler component.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
