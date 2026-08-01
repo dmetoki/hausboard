@@ -1,3 +1,9 @@
+import type { SocialUser } from "@/components/dashboard/user-list";
+import type { SocialPost } from "@/components/dashboard/post-list";
+import type { CountryValue } from "@/components/dashboard/world-map";
+import type { CountryScore } from "@/components/dashboard/country-score-list";
+import { titleCaseFromKebab } from "@/lib/utils";
+
 export type MetricPoint = {
   label: string;
   value: number;
@@ -41,7 +47,7 @@ export function generateMockDistribution(
   }));
 }
 
-export type SentimentPoint = {
+type SentimentPoint = {
   date: string;
   positive: number;
   negative: number;
@@ -73,7 +79,7 @@ export function generateMockSentimentSeries(
   });
 }
 
-export type SentimentBySource = {
+type SentimentBySource = {
   label: string;
   positive: number;
   negative: number;
@@ -118,43 +124,29 @@ export function generateMockSentimentByCountry(
   }));
 }
 
-const SENTIMENT_LEVELS = [
-  "negative",
-  "slightly-negative",
-  "neutral",
-  "slightly-positive",
-  "positive",
-] as const;
-
+// `numericId` is the ISO 3166-1 NUMERIC code for the same country — matches
+// the `id` field on each feature in the world-atlas topology `WorldMap`
+// renders, which has no alpha-2 field of its own to match against.
 const COUNTRY_CODES = [
-  { countryCode: "US", countryName: "United States" },
-  { countryCode: "GB", countryName: "United Kingdom" },
-  { countryCode: "IN", countryName: "India" },
-  { countryCode: "BR", countryName: "Brazil" },
-  { countryCode: "AU", countryName: "Australia" },
-  { countryCode: "CA", countryName: "Canada" },
-  { countryCode: "DE", countryName: "Germany" },
-  { countryCode: "FR", countryName: "France" },
-  { countryCode: "JP", countryName: "Japan" },
-  { countryCode: "MX", countryName: "Mexico" },
-  { countryCode: "ES", countryName: "Spain" },
-  { countryCode: "IT", countryName: "Italy" },
-  { countryCode: "NL", countryName: "Netherlands" },
-  { countryCode: "SE", countryName: "Sweden" },
-  { countryCode: "KR", countryName: "South Korea" },
-  { countryCode: "ZA", countryName: "South Africa" },
-  { countryCode: "AR", countryName: "Argentina" },
-  { countryCode: "NG", countryName: "Nigeria" },
+  { countryCode: "US", countryName: "United States", numericId: "840" },
+  { countryCode: "GB", countryName: "United Kingdom", numericId: "826" },
+  { countryCode: "IN", countryName: "India", numericId: "356" },
+  { countryCode: "BR", countryName: "Brazil", numericId: "076" },
+  { countryCode: "AU", countryName: "Australia", numericId: "036" },
+  { countryCode: "CA", countryName: "Canada", numericId: "124" },
+  { countryCode: "DE", countryName: "Germany", numericId: "276" },
+  { countryCode: "FR", countryName: "France", numericId: "250" },
+  { countryCode: "JP", countryName: "Japan", numericId: "392" },
+  { countryCode: "MX", countryName: "Mexico", numericId: "484" },
+  { countryCode: "ES", countryName: "Spain", numericId: "724" },
+  { countryCode: "IT", countryName: "Italy", numericId: "380" },
+  { countryCode: "NL", countryName: "Netherlands", numericId: "528" },
+  { countryCode: "SE", countryName: "Sweden", numericId: "752" },
+  { countryCode: "KR", countryName: "South Korea", numericId: "410" },
+  { countryCode: "ZA", countryName: "South Africa", numericId: "710" },
+  { countryCode: "AR", countryName: "Argentina", numericId: "032" },
+  { countryCode: "NG", countryName: "Nigeria", numericId: "566" },
 ] as const;
-
-export function generateMockCountrySentiments(seed: string) {
-  const random = seededRandom(seed);
-
-  return COUNTRY_CODES.map((country) => ({
-    ...country,
-    sentiment: SENTIMENT_LEVELS[Math.floor(random() * SENTIMENT_LEVELS.length)],
-  }));
-}
 
 export const DASHBOARD_METRICS = [
   "Revenue",
@@ -179,26 +171,21 @@ const MOCK_USERS = [
   { name: "Yuki Tanaka", username: "yukitanaka", source: "tiktok" },
 ] as const;
 
-export type SocialUserSeed = {
-  id: string;
-  name: string;
-  username: string;
-  followers: number;
-  source: (typeof MOCK_USERS)[number]["source"];
-  status: "promoter" | "detractor";
-};
-
-export function generateMockUsers(seed: string): SocialUserSeed[] {
+export function generateMockUsers(seed: string): SocialUser[] {
   const random = seededRandom(seed);
 
-  return MOCK_USERS.map((user, i) => ({
-    id: `${seed}-${i}`,
-    name: user.name,
-    username: user.username,
-    source: user.source,
-    followers: Math.round(1_000 + random() * 500_000),
-    status: random() > 0.3 ? "promoter" : "detractor",
-  }));
+  return MOCK_USERS.map((user, i) => {
+    const status = random() > 0.3 ? "promoter" : "detractor";
+    return {
+      id: `${seed}-${i}`,
+      name: user.name,
+      username: user.username,
+      source: user.source,
+      followers: Math.round(1_000 + random() * 500_000),
+      status,
+      statusLabel: titleCaseFromKebab(status),
+    };
+  });
 }
 
 const MOCK_POST_TEXTS = [
@@ -229,16 +216,7 @@ const MOCK_POST_TEXTS = [
   },
 ] as const;
 
-export type SocialPostSeed = {
-  id: string;
-  text: string;
-  source: (typeof MOCK_POST_TEXTS)[number]["source"];
-  impressions: number;
-  likes: number;
-  sentiment: (typeof MOCK_POST_TEXTS)[number]["sentiment"];
-};
-
-export function generateMockPosts(seed: string): SocialPostSeed[] {
+export function generateMockPosts(seed: string): SocialPost[] {
   const random = seededRandom(seed);
 
   return MOCK_POST_TEXTS.map((post, i) => ({
@@ -246,33 +224,92 @@ export function generateMockPosts(seed: string): SocialPostSeed[] {
     text: post.text,
     source: post.source,
     sentiment: post.sentiment,
+    sentimentLabel: titleCaseFromKebab(post.sentiment),
     impressions: Math.round(1_000 + random() * 2_000_000),
     likes: Math.round(10 + random() * 5_000),
   }));
 }
 
-// ISO 3166-1 numeric codes — matches the `id` field on each feature in the
-// world-atlas topology `WorldMap` renders.
-const MOCK_COUNTRIES = [
-  { id: "840", label: "United States" },
-  { id: "826", label: "United Kingdom" },
-  { id: "124", label: "Canada" },
-  { id: "036", label: "Australia" },
-  { id: "276", label: "Germany" },
-  { id: "250", label: "France" },
-  { id: "076", label: "Brazil" },
-  { id: "356", label: "India" },
-  { id: "392", label: "Japan" },
-  { id: "484", label: "Mexico" },
-] as const;
+// Shape of the (eventual) real "mentions by country" API response — each
+// country's raw sentiment breakdown, alpha-2 coded. `mentions` is always the
+// sum of the other three; not stored separately by the source, just derived.
+type CountrySentimentBreakdown = {
+  id: string; // ISO 3166-1 alpha-2, e.g. "AR"
+  label: string;
+  positive: number;
+  neutral: number;
+  negative: number;
+  mentions: number;
+};
 
-export function generateMockCountryMentions(seed: string) {
+export function generateMockCountrySentimentBreakdown(
+  seed: string,
+): CountrySentimentBreakdown[] {
   const random = seededRandom(seed);
 
-  return MOCK_COUNTRIES.map((country) => ({
-    ...country,
-    value: Math.round(500 + random() * 50_000),
-  }));
+  return COUNTRY_CODES.map(({ countryCode, countryName }) => {
+    const positive = Math.round(random() * 500);
+    const neutral = Math.round(random() * 200);
+    const negative = Math.round(random() * 150);
+
+    return {
+      id: countryCode,
+      label: countryName,
+      positive,
+      neutral,
+      negative,
+      mentions: positive + neutral + negative,
+    };
+  });
+}
+
+const NUMERIC_ID_BY_COUNTRY_CODE: Record<string, string> = Object.fromEntries(
+  COUNTRY_CODES.map(({ countryCode, numericId }) => [countryCode, numericId]),
+);
+
+// The one place this breakdown's positive/negative counts turn into a
+// diverging status score — both adapters below derive their score from this,
+// so `WorldMap` and `CountryScoreList` always agree on the same country.
+function scoreFromBreakdown(row: CountrySentimentBreakdown): number {
+  const diff = row.positive - row.negative;
+  return diff < 0 ? -5 : diff > 0 ? 5 : 0;
+}
+
+function scoreLabelFromScore(score: number): string {
+  return score < 0 ? "Negative" : score > 0 ? "Positive" : "Neutral";
+}
+
+// Turns the raw by-country breakdown into what `WorldMap` actually renders:
+// a diverging status score (not a magnitude) plus the numeric country id its
+// topology needs instead of alpha-2. Countries with no known numeric id are
+// dropped rather than rendered with a made-up id.
+export function worldMapDataFromCountryBreakdown(
+  rows: CountrySentimentBreakdown[],
+): CountryValue[] {
+  return rows.flatMap((row) => {
+    const numericId = NUMERIC_ID_BY_COUNTRY_CODE[row.id];
+    if (!numericId) return [];
+
+    return [
+      { id: numericId, label: row.label, score: scoreFromBreakdown(row), mentions: row.mentions },
+    ];
+  });
+}
+
+// Same breakdown, adapted for `CountryScoreList` instead — same score rule
+// as `worldMapDataFromCountryBreakdown`, so both cards reflect one payload.
+export function countryScoreListDataFromCountryBreakdown(
+  rows: CountrySentimentBreakdown[],
+): CountryScore[] {
+  return rows.map((row) => {
+    const score = scoreFromBreakdown(row);
+    return {
+      countryCode: row.id,
+      countryName: row.label,
+      score,
+      scoreLabel: scoreLabelFromScore(score),
+    };
+  });
 }
 
 export const MOCK_NARRATIVE_SUMMARY =
@@ -291,7 +328,7 @@ export const HIGHLIGHT_METRICS = [
   { label: "Unique Authors", value: "1,204" },
 ] as const;
 
-export type NotificationSeed = {
+type NotificationSeed = {
   id: string;
   title: string;
   description: string;

@@ -11,7 +11,7 @@ import {
 } from "react";
 import { useOrganization, useOrganizationList } from "@clerk/nextjs";
 
-export type Org = {
+type Org = {
   id: string;
   name: string;
   imageUrl: string;

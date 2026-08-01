@@ -176,15 +176,19 @@ type SocialUser = {
   followers: number;
   source: keyof typeof Icons;              // see `Icons`, components/icons.tsx
   status: "promoter" | "detractor";
+  statusLabel: string;                     // display text for `status` — caller-owned, see below
 };
 
 <UserList users={SocialUser[]} />
 ```
 
-**Contract:** `source` must be a key that exists on `Icons` — there is no
-fallback for an unknown key. `status` drives a fixed status-color badge
-(promoter → the positive color, detractor → the negative color); it's a
-semantic state, not a free color choice.
+**Contract:** `source` must be a key that exists on `Icons`; falls back to
+`Icons.unknown` if not (a real runtime safety net — `source` may come from
+data that doesn't match the compile-time union). `status` drives a fixed
+status-color badge (promoter → the positive color, detractor → the negative
+color) — icon/color are component-owned, but the display text is not:
+`statusLabel` is the caller/data layer's wording (e.g. for localization),
+rendered as-is.
 
 ### `PostList` — recent social posts
 
@@ -196,22 +200,25 @@ type SocialPost = {
   impressions: number;
   likes: number;
   sentiment: "positive" | "negative" | "neutral";
+  sentimentLabel: string;                  // display text for `sentiment` — caller-owned
 };
 
 <PostList posts={SocialPost[]} />
 ```
 
-**Contract:** same `source`/`Icons` contract as `UserList`. `text` is clamped
-to 2 lines visually (`line-clamp-2`) — pass the full text, don't pre-truncate
-it yourself.
+**Contract:** same `source`/`Icons` fallback and `sentimentLabel`
+caller-owns-the-text contract as `UserList`. `text` is clamped to 2 lines
+visually (`line-clamp-2`) — pass the full text, don't pre-truncate it
+yourself.
 
 ### `WorldMap` — choropleth by country
 
 ```ts
 type CountryValue = {
-  id: string;   // ISO 3166-1 NUMERIC code as a string, e.g. "840" for the US
+  id: string;      // ISO 3166-1 NUMERIC code as a string, e.g. "840" for the US
   label: string;
-  value: number;
+  score: number;   // sign only: negative < 0, neutral = 0, positive > 0 — NOT a magnitude
+  mentions: number; // raw count, shown in the hover tooltip only — plays no part in color
 };
 
 <WorldMap data={CountryValue[]} />
@@ -219,31 +226,52 @@ type CountryValue = {
 
 **Contract:** `id` must be the ISO 3166-1 **numeric** code, not alpha-2/alpha-3
 — it's matched directly against the `id` field on each feature in the
-`world-atlas` `countries-110m.json` topology. Countries not present in `data`
-still render, shaded as "no data" rather than omitted. Antarctica is always
-excluded from render, and the US feature has its Hawaii polygon stripped for
-framing purposes — both independent of what `data` contains.
+`world-atlas` `countries-110m.json` topology. `score` drives a fixed
+3-color diverging status scale (same negative/neutral/positive convention as
+the rest of the dashboard) purely by sign — `-5` and `-1` render identically;
+pass a real magnitude in `mentions` instead if you need to show volume, since
+that's what the tooltip reads. Countries not present in `data` still render,
+shaded as "no data" rather than omitted. Antarctica is always excluded from
+render, and the US feature has its Hawaii polygon stripped for framing
+purposes — both independent of what `data` contains.
 
-### `CountrySentimentList` — scrollable country/sentiment list
+`lib/mock-metrics.ts` demonstrates the intended real-world pipeline for this
+component, and it's the **same pipeline `CountryScoreList` below uses** —
+one upstream payload, two adapters, one per component:
+`generateMockCountrySentimentBreakdown` produces the raw per-country
+`{ id (alpha-2), label, positive, neutral, negative, mentions }` shape a real
+sentiment API would plausibly return, and `worldMapDataFromCountryBreakdown`
+adapts it into `WorldMap`'s actual `CountryValue[]` contract — converting
+alpha-2 → numeric ids and collapsing `positive - negative` down to a `score`
+sign. `WorldMap` itself never sees the alpha-2/positive/negative shape, only
+the adapted output — neither this component nor `CountryScoreList` know
+"sentiment" as a concept, only an opaque `score` whose sign they color and a
+`label`/`scoreLabel` they render verbatim.
+
+### `CountryScoreList` — scrollable country/score list
 
 ```ts
-type SentimentLevel =
-  | "negative" | "slightly-negative" | "neutral"
-  | "slightly-positive" | "positive";
-
-type CountrySentiment = {
+type CountryScore = {
   countryCode: string; // ISO 3166-1 ALPHA-2, e.g. "US" — different code system than WorldMap's `id`
   countryName: string;
-  sentiment: SentimentLevel;
+  score: number;       // sign only: negative < 0, neutral = 0, positive > 0 — same convention as WorldMap
+  scoreLabel: string;  // display text for `score` — caller-owned, see UserList above
 };
 
-<CountrySentimentList countries={CountrySentiment[]} />
+<CountryScoreList countries={CountryScore[]} />
 ```
 
 **Contract:** `countryCode` is alpha-2 (not the numeric code `WorldMap` uses)
-— it's passed straight through to `react-country-flag`. The list has a fixed
-height and scrolls internally; it does not grow the card to fit
-`countries.length`.
+— it's passed straight through to `react-country-flag`. `score`'s sign picks
+the fill color via the shared `statusColorFromScore` helper (`lib/utils.ts`)
+— the same one `WorldMap` uses, so a country never renders a different color
+in the map than in this list for the same data. The list has a fixed height
+and scrolls internally; it does not grow the card to fit `countries.length`.
+`worldMapDataFromCountryBreakdown` and `countryScoreListDataFromCountryBreakdown`
+in `lib/mock-metrics.ts` both derive their score from the exact same rule, so
+wiring both components from one `generateMockCountrySentimentBreakdown()`
+call (rather than two) keeps them in agreement — see how
+`app/(app)/brand-reputation/page.tsx` does this.
 
 ### `StatHighlight` / `NarrativeSummary` — non-chart cards
 

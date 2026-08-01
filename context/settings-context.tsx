@@ -9,17 +9,17 @@ import {
 } from "react";
 import { parseDate } from "@/lib/utils";
 
-export type OrgFilterOption = {
+type OrgFilterOption = {
   label: string;
   value: string;
 };
 
-export type OrgFilterConfig = {
+type OrgFilterConfig = {
   id: string;
   options: OrgFilterOption[];
 };
 
-export type OrgSettingsEntry = {
+type OrgSettingsEntry = {
   id: string;
   filters: OrgFilterConfig[];
 };

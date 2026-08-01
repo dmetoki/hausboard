@@ -11,14 +11,19 @@ export type SocialUser = {
   followers: number;
   source: keyof typeof Icons;
   status: "promoter" | "detractor";
+  /** Display text for `status` — owned by the caller/data layer, not this
+   * component, so wording can change (localization, rephrasing) without
+   * touching the component. */
+  statusLabel: string;
 };
 
 // Promoter/detractor is a genuine status signal (like sentiment), so it
 // earns the same fixed status-color treatment used elsewhere in the
 // dashboard — not decorative color, so it's exempt from "keep it colorless".
+// Label text is NOT here — see `SocialUser.statusLabel`.
 const STATUS_STYLES = {
-  promoter: { label: "Promoter", icon: Smile, color: "--chart-positive" },
-  detractor: { label: "Detractor", icon: Frown, color: "--chart-negative" },
+  promoter: { icon: Smile, color: "--chart-positive" },
+  detractor: { icon: Frown, color: "--chart-negative" },
 } as const;
 
 function initials(name: string) {
@@ -54,7 +59,12 @@ export function UserList({ users }: { users: SocialUser[] }) {
               </span>
             </div>
             <span className="flex shrink-0 items-center gap-2 text-xs leading-none text-muted-foreground">
-              <IconBadge icon={Icons[user.source]} size="size-6" iconSize="size-3.5" />
+              <IconBadge
+                icon={Icons[user.source] ?? Icons.unknown}
+                size="size-6"
+                iconSize="size-3.5"
+                className="text-foreground"
+              />
               <span className="flex items-center gap-1 leading-none">
                 <Users className="size-3" />
                 <span className="inline-block w-9 tabular-nums">
@@ -65,7 +75,7 @@ export function UserList({ users }: { users: SocialUser[] }) {
             <StatusBadge
               icon={status.icon}
               color={status.color}
-              label={status.label}
+              label={user.statusLabel}
               size="size-6"
               iconSize="size-3.5"
             />

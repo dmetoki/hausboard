@@ -1,30 +1,18 @@
 "use client";
 
 import ReactCountryFlag from "react-country-flag";
+import { statusColorFromScore } from "@/lib/utils";
 
-export type SentimentLevel =
-  | "negative"
-  | "slightly-negative"
-  | "neutral"
-  | "slightly-positive"
-  | "positive";
-
-export type CountrySentiment = {
+export type CountryScore = {
   /** Two-letter ISO 3166-1 alpha-2 country code, e.g. "US". */
   countryCode: string;
   countryName: string;
-  sentiment: SentimentLevel;
-};
-
-// Same fixed status-color convention used everywhere else sentiment shows up
-// in the dashboard (mirror chart, stacked bar charts, post/user lists) — the
-// "slightly" levels share their base color; the label carries the degree.
-const SENTIMENT_STYLES: Record<SentimentLevel, { label: string; color: string }> = {
-  negative: { label: "Negative", color: "--chart-negative" },
-  "slightly-negative": { label: "Slightly Negative", color: "--chart-negative" },
-  neutral: { label: "Neutral", color: "--chart-neutral" },
-  "slightly-positive": { label: "Slightly Positive", color: "--chart-positive" },
-  positive: { label: "Positive", color: "--chart-positive" },
+  /** Sign only, not a magnitude: negative < 0, neutral = 0, positive > 0. */
+  score: number;
+  /** Display text for `score` — owned by the caller/data layer, not this
+   * component, so wording can change (localization, rephrasing) without
+   * touching the component. */
+  scoreLabel: string;
 };
 
 // Matches the world map's typical rendered height in the same row (a fixed
@@ -35,19 +23,19 @@ const SENTIMENT_STYLES: Record<SentimentLevel, { label: string; color: string }>
 const LIST_HEIGHT = "20rem";
 
 /**
- * A plain scrollable list (country + sentiment), height-capped to roughly
+ * A plain scrollable list (country + score), height-capped to roughly
  * match its neighboring map card, that scrolls internally instead of
  * growing the card to fit every row — matches the row-based layout of
  * `UserList`/`PostList` but capped rather than open-ended.
  */
-export function CountrySentimentList({ countries }: { countries: CountrySentiment[] }) {
+export function CountryScoreList({ countries }: { countries: CountryScore[] }) {
   return (
     <div
       className="divide-y divide-border overflow-y-auto"
       style={{ height: LIST_HEIGHT }}
     >
       {countries.map((country) => {
-        const sentiment = SENTIMENT_STYLES[country.sentiment];
+        const color = statusColorFromScore(country.score);
 
         return (
           <div
@@ -66,11 +54,11 @@ export function CountrySentimentList({ countries }: { countries: CountrySentimen
             <span
               className="shrink-0 rounded-none px-2 py-0.5 text-[11px] font-medium"
               style={{
-                backgroundColor: `color-mix(in oklab, var(${sentiment.color}) 16%, transparent)`,
-                color: `var(${sentiment.color})`,
+                backgroundColor: `color-mix(in oklab, var(${color}) 16%, transparent)`,
+                color: `var(${color})`,
               }}
             >
-              {sentiment.label}
+              {country.scoreLabel}
             </span>
           </div>
         );

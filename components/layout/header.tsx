@@ -1,4 +1,6 @@
 import { House } from "lucide-react";
+import { Nav } from "@/components/layout/nav";
+import { MobileNav } from "@/components/layout/mobile-nav";
 import { UserMenu } from "@/components/layout/user-menu";
 import { NotificationsMenu } from "@/components/layout/notifications-menu";
 import { DateRangePicker } from "@/components/layout/date-range-picker";
@@ -11,13 +13,15 @@ export function Header() {
           <House className="size-5" />
         </div>
         <div className="flex flex-col justify-center leading-tight">
-          <span className="text-base font-semibold text-foreground">Hausboard</span>
-          <span className="text-xs text-muted-foreground">Your tagline here</span>
+          <span className="text-base font-semibold text-foreground uppercase">Hausboard</span>
+          <span className="-mt-0.5 text-[11px] text-muted-foreground">Your tagline here</span>
         </div>
+        <Nav className="ml-8" />
         <div className="ml-auto flex h-9 items-center gap-1.5">
           <DateRangePicker />
           <NotificationsMenu />
           <UserMenu />
+          <MobileNav />
         </div>
       </div>
     </header>

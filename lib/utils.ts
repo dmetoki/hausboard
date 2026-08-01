@@ -12,6 +12,28 @@ export const compactNumberFormatter = new Intl.NumberFormat("en-US", {
   notation: "compact",
 })
 
+// Turns a kebab-case status/sentiment value ("slightly-positive") into its
+// default display label ("Slightly Positive"). Used by data layers to derive
+// a label for the dashboard's status/sentiment fields instead of each
+// component hardcoding its own label text per value.
+export function titleCaseFromKebab(value: string): string {
+  return value
+    .split("-")
+    .map((word) => word[0].toUpperCase() + word.slice(1))
+    .join(" ")
+}
+
+// A diverging status color by sign only (not magnitude) — negative < 0,
+// neutral = 0, positive > 0 — shared by any component that colors a score
+// this way (world map choropleth, country score list) instead of each
+// re-implementing the same three-way branch. Returns a bare --chart-*
+// variable name; wrap in var(...) at the call site.
+export function statusColorFromScore(score: number): string {
+  if (score < 0) return "--chart-negative"
+  if (score > 0) return "--chart-positive"
+  return "--chart-neutral"
+}
+
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
 const DATE_COMPACT = /^(\d{4})(\d{2})(\d{2})$/
 

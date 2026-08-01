@@ -43,13 +43,13 @@ export function DateRangePicker() {
         render={
           <Button
             variant="ghost"
-            size="sm"
-            className="h-9 min-w-[202px] justify-start whitespace-nowrap border-transparent shadow-[inset_0_0_0_1px_var(--border)] hover:bg-muted"
+            size="icon"
+            className="h-9 w-9 justify-center border-transparent shadow-[inset_0_0_0_1px_var(--border)] hover:bg-muted md:w-auto md:min-w-[202px] md:justify-start md:px-2.5"
           />
         }
       >
         <CalendarIcon className="size-3.5" />
-        <span className="ml-3 text-[11px]">{label}</span>
+        <span className="ml-3 hidden text-[11px] whitespace-nowrap md:inline">{label}</span>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-auto p-0">
         <Calendar

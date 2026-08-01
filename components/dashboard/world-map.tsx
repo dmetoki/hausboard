@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type MouseEvent } from "react";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
+import { statusColorFromScore } from "@/lib/utils";
 
 const GEO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
@@ -65,15 +66,20 @@ export type CountryValue = {
    * matches the `id` field on each feature in the world-atlas topology. */
   id: string;
   label: string;
-  value: number;
+  /** Drives the fill color — a diverging status scale, not a magnitude:
+   * negative → the negative color, zero → neutral, positive → the positive
+   * color. Only the sign matters, not how far from zero. */
+  score: number;
+  /** Raw mention count for this country — shown in the hover tooltip, plays
+   * no part in color. */
+  mentions: number;
 };
 
-type HoverState = { label: string; value: number; x: number; y: number };
+type HoverState = { label: string; mentions: number; x: number; y: number };
 
 export function WorldMap({ data }: { data: CountryValue[] }) {
   const [hover, setHover] = useState<HoverState | null>(null);
   const byId = useMemo(() => new Map(data.map((d) => [d.id, d])), [data]);
-  const max = useMemo(() => Math.max(1, ...data.map((d) => d.value)), [data]);
 
   function handleMove(event: MouseEvent<SVGPathElement>, entry?: CountryValue) {
     if (!entry) return;
@@ -81,7 +87,7 @@ export function WorldMap({ data }: { data: CountryValue[] }) {
     if (!rect) return;
     setHover({
       label: entry.label,
-      value: entry.value,
+      mentions: entry.mentions,
       x: event.clientX - rect.left,
       y: event.clientY - rect.top,
     });
@@ -111,9 +117,9 @@ export function WorldMap({ data }: { data: CountryValue[] }) {
               .map((geo) => excludeHawaii(geo, path))
               .map((geo) => {
                 const entry = byId.get(geo.id);
-                const intensity = entry ? 25 + (entry.value / max) * 75 : 0;
-                const fill = entry
-                  ? `color-mix(in oklab, var(--chart-1) ${intensity}%, var(--muted))`
+                const fill = entry ? `var(${statusColorFromScore(entry.score)})` : "var(--muted)";
+                const hoverFill = entry
+                  ? `color-mix(in oklab, ${fill} 75%, var(--foreground) 25%)`
                   : "var(--muted)";
 
                 return (
@@ -126,9 +132,9 @@ export function WorldMap({ data }: { data: CountryValue[] }) {
                     onMouseMove={(event) => handleMove(event, entry)}
                     onMouseLeave={() => setHover(null)}
                     style={{
-                      default: { outline: "none" },
-                      hover: { outline: "none", fill: entry ? "var(--chart-2)" : "var(--muted)" },
-                      pressed: { outline: "none" },
+                      default: { outline: "none", cursor: entry ? "pointer" : "default" },
+                      hover: { outline: "none", fill: hoverFill, cursor: entry ? "pointer" : "default" },
+                      pressed: { outline: "none", cursor: entry ? "pointer" : "default" },
                     }}
                   />
                 );
@@ -142,7 +148,7 @@ export function WorldMap({ data }: { data: CountryValue[] }) {
           style={{ left: hover.x, top: hover.y - 8 }}
         >
           <div className="font-medium text-popover-foreground">{hover.label}</div>
-          <div className="text-muted-foreground">{hover.value.toLocaleString()} mentions</div>
+          <div className="text-muted-foreground">{hover.mentions.toLocaleString()} mentions</div>
         </div>
       )}
     </div>
