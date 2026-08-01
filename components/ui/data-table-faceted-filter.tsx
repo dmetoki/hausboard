@@ -39,12 +39,20 @@ export function DataTableFacetedFilter({
   selected,
   onSelectedChange,
   className,
+  align = "start",
+  contentClassName,
 }: {
   title: string
   options: FacetedFilterOption[]
   selected: string[]
   onSelectedChange: (values: string[]) => void
   className?: string
+  /** Which edge of the trigger the popup aligns to — "end" for filters near
+   * the right edge of their container, where "start" would overflow. */
+  align?: "start" | "center" | "end"
+  /** Overrides the popup's default width — a filter with longer labels
+   * (e.g. full country names, not 3-letter codes) may need more than `w-52`. */
+  contentClassName?: string
 }) {
   const selectedSet = new Set(selected)
 
@@ -79,14 +87,14 @@ export function DataTableFacetedFilter({
         <Badge
           variant="secondary"
           className={cn(
-            "w-4 justify-center rounded-sm px-0 font-normal tabular-nums",
+            "min-w-4 justify-center rounded-sm px-0 font-normal tabular-nums",
             selectedSet.size === 0 && "invisible"
           )}
         >
           {selectedSet.size || 0}
         </Badge>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-52 p-0">
+      <PopoverContent align={align} className={cn("w-52 p-0", contentClassName)}>
         <Command>
           <CommandInput placeholder={`Search ${title.toLowerCase()}...`} />
           <CommandList>

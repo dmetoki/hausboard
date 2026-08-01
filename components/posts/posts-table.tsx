@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/data-table-faceted-filter";
 import { DataTableViewOptions } from "@/components/ui/data-table-view-options";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -47,7 +48,7 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 // up whatever space is left instead of overflowing or leaving a gap.
 const COLUMN_WIDTHS: Record<string, string> = {
   date: "w-28",
-  source: "w-10 text-center",
+  channel: "w-10 text-center",
   sentiment: "w-10 text-center",
   author: "w-32",
   countryCode: "w-10 text-center",
@@ -74,15 +75,15 @@ const SENTIMENT_OPTIONS: FacetedFilterOption[] = [
   },
 ];
 
-// Only the sources actually present in the mock post pool — matches
+// Only the channels actually present in the mock post pool — matches
 // `MOCK_POST_TEXTS` in lib/mock-metrics.ts.
 const CHANNEL_OPTIONS: FacetedFilterOption[] = (
   ["x", "news", "linkedin", "blog", "reddit"] as const
-).map((source) => {
-  const Icon = Icons[source];
+).map((channel) => {
+  const Icon = Icons[channel];
   return {
-    label: source[0].toUpperCase() + source.slice(1),
-    value: source,
+    label: channel[0].toUpperCase() + channel.slice(1),
+    value: channel,
     icon: <Icon className="size-3.5" />,
   };
 });
@@ -95,15 +96,15 @@ export function PostsTable() {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [sentiments, setSentiments] = useState<string[]>([]);
-  const [sources, setSources] = useState<string[]>([]);
+  const [channels, setChannels] = useState<string[]>([]);
 
   function updateSentiments(values: string[]) {
     setSentiments(values);
     setPageIndex(0);
   }
 
-  function updateSources(values: string[]) {
-    setSources(values);
+  function updateChannels(values: string[]) {
+    setChannels(values);
     setPageIndex(0);
   }
 
@@ -128,7 +129,7 @@ export function PostsTable() {
   // Keyed on every param the mock "endpoint" depends on — swapping
   // `fetchMockPosts` for a real fetch later needs no change here.
   const { data, isLoading } = useSWR(
-    ["posts", pageIndex, pageSize, sort?.id, sort?.desc, search, sentiments, sources],
+    ["posts", pageIndex, pageSize, sort?.id, sort?.desc, search, sentiments, channels],
     () =>
       fetchMockPosts({
         page: pageIndex,
@@ -137,7 +138,7 @@ export function PostsTable() {
         sortOrder: sort?.desc === false ? "asc" : "desc",
         search,
         sentiments,
-        sources,
+        channels,
       }),
     { keepPreviousData: true },
   );
@@ -185,8 +186,8 @@ export function PostsTable() {
           <DataTableFacetedFilter
             title="Channel"
             options={CHANNEL_OPTIONS}
-            selected={sources}
-            onSelectedChange={updateSources}
+            selected={channels}
+            onSelectedChange={updateChannels}
           />
           <DataTableViewOptions table={table} />
         </div>
@@ -233,6 +234,8 @@ export function PostsTable() {
           </div>
         )}
       </div>
+
+      <Separator />
 
       <div className="grid grid-cols-3 items-center text-xs text-muted-foreground">
         <div className="flex items-center gap-2">

@@ -251,7 +251,7 @@ export function generateMockPostsTable(seed: string, count: number): PostTableRo
       author: author.name,
       countryCode: country.countryCode,
       countryName: country.countryName,
-      source: post.source,
+      channel: post.source,
       sentiment: post.sentiment,
       sentimentLabel: titleCaseFromKebab(post.sentiment),
       impressions: Math.round(1_000 + random() * 2_000_000),
@@ -270,7 +270,7 @@ export type PostsQuery = {
   search: string;
   /** Empty/omitted means "no filter", not "match nothing". */
   sentiments?: string[];
-  sources?: string[];
+  channels?: string[];
 };
 
 export type PaginatedPosts = {
@@ -290,7 +290,7 @@ export async function fetchMockPosts(query: PostsQuery): Promise<PaginatedPosts>
   const filtered = all.filter((post) => {
     if (search && !post.text.toLowerCase().includes(search)) return false;
     if (query.sentiments?.length && !query.sentiments.includes(post.sentiment)) return false;
-    if (query.sources?.length && !query.sources.includes(post.source)) return false;
+    if (query.channels?.length && !query.channels.includes(post.channel)) return false;
     return true;
   });
 

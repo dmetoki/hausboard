@@ -31,10 +31,11 @@ declare module "@tanstack/react-table" {
 }
 
 // The posts table's own row shape — a superset of `SocialPost` (id, text,
-// source, sentiment, sentimentLabel, impressions) plus `date` and `author`.
-// Kept separate from `SocialPost` itself so this table's needs don't leak
-// into `PostList`/the brand-reputation page, which only ever needed the
-// smaller shape.
+// sentiment, sentimentLabel, impressions) plus `date`, `author`, and
+// `channel` (this table's own nomenclature for what `SocialPost` still
+// calls `source`). Kept separate from `SocialPost` itself so this table's
+// needs don't leak into `PostList`/the brand-reputation page, which only
+// ever needed the smaller shape.
 export type PostTableRow = {
   id: string;
   text: string;
@@ -43,7 +44,7 @@ export type PostTableRow = {
    * uses, for the same `react-country-flag` rendering. */
   countryCode: string;
   countryName: string;
-  source: keyof typeof Icons;
+  channel: keyof typeof Icons;
   sentiment: "positive" | "negative" | "neutral";
   sentimentLabel: string;
   impressions: number;
@@ -98,27 +99,6 @@ export function getPostColumns(): ColumnDef<PostTableRow>[] {
       ),
     },
     {
-      accessorKey: "source",
-      header: () => <Share2 className="size-3.5 text-muted-foreground" />,
-      meta: { label: "Source" },
-      enableSorting: false,
-      size: 40,
-      cell: ({ row }) => (
-        <IconBadge icon={Icons[row.original.source] ?? Icons.unknown} />
-      ),
-    },
-    {
-      accessorKey: "text",
-      header: "Title",
-      meta: { label: "Title" },
-      enableSorting: false,
-      cell: ({ row }) => (
-        <span className="block w-full truncate text-foreground" title={row.original.text}>
-          {row.original.text}
-        </span>
-      ),
-    },
-    {
       accessorKey: "sentiment",
       header: ({ column }) => (
         <SortableHeader column={column} label={<Smile className="size-3.5" />} />
@@ -139,11 +119,25 @@ export function getPostColumns(): ColumnDef<PostTableRow>[] {
       },
     },
     {
-      accessorKey: "author",
-      header: "Author",
-      meta: { label: "Author" },
+      accessorKey: "channel",
+      header: () => <Share2 className="size-3.5 text-muted-foreground" />,
+      meta: { label: "Channel" },
       enableSorting: false,
-      cell: ({ row }) => <span className="text-foreground">{row.original.author}</span>,
+      size: 40,
+      cell: ({ row }) => (
+        <IconBadge icon={Icons[row.original.channel] ?? Icons.unknown} />
+      ),
+    },
+    {
+      accessorKey: "text",
+      header: "Title",
+      meta: { label: "Title" },
+      enableSorting: false,
+      cell: ({ row }) => (
+        <span className="block w-full truncate text-foreground" title={row.original.text}>
+          {row.original.text}
+        </span>
+      ),
     },
     {
       accessorKey: "countryCode",
@@ -160,6 +154,13 @@ export function getPostColumns(): ColumnDef<PostTableRow>[] {
           title={row.original.countryName}
         />
       ),
+    },
+    {
+      accessorKey: "author",
+      header: "Author",
+      meta: { label: "Author" },
+      enableSorting: false,
+      cell: ({ row }) => <span className="text-foreground">{row.original.author}</span>,
     },
     {
       accessorKey: "impressions",
