@@ -9,7 +9,7 @@ export type SocialUser = {
   name: string;
   username: string;
   followers: number;
-  source: keyof typeof Icons;
+  channel: keyof typeof Icons;
   status: "promoter" | "detractor";
   /** Display text for `status` — owned by the caller/data layer, not this
    * component, so wording can change (localization, rephrasing) without
@@ -60,7 +60,7 @@ export function UserList({ users }: { users: SocialUser[] }) {
             </div>
             <span className="flex shrink-0 items-center gap-2 text-xs leading-none text-muted-foreground">
               <IconBadge
-                icon={Icons[user.source] ?? Icons.unknown}
+                icon={Icons[user.channel] ?? Icons.unknown}
                 size="size-6"
                 iconSize="size-3.5"
                 className="text-foreground"

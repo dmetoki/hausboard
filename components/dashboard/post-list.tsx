@@ -6,7 +6,7 @@ import { compactNumberFormatter } from "@/lib/utils";
 export type SocialPost = {
   id: string;
   text: string;
-  source: keyof typeof Icons;
+  channel: keyof typeof Icons;
   impressions: number;
   likes: number;
   sentiment: "positive" | "negative" | "neutral";
@@ -35,7 +35,7 @@ export function PostList({ posts }: { posts: SocialPost[] }) {
           <div key={post.id} className="flex flex-col gap-2.5 py-3.5 first:pt-0 last:pb-0">
             <p className="line-clamp-2 text-xs leading-5 text-foreground">{post.text}</p>
             <div className="flex items-center gap-5 leading-none text-muted-foreground">
-              <IconBadge icon={Icons[post.source] ?? Icons.unknown} />
+              <IconBadge icon={Icons[post.channel] ?? Icons.unknown} />
               <span className="flex items-center gap-1 text-xs tabular-nums">
                 <ChartNoAxesColumn className="size-3 shrink-0" />
                 <span className="inline-block w-9">

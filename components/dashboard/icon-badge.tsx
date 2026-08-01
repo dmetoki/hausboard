@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
 import { cn } from "@/lib/utils";
 
-/** A small bordered circle around an icon — used for the source-platform
+/** A small bordered circle around an icon — used for the channel-platform
  * badge in both `UserList` and `PostList`. */
 export function IconBadge({
   icon: Icon,

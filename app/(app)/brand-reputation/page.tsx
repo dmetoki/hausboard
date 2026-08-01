@@ -20,8 +20,8 @@ import {
   generateMockCountrySentimentBreakdown,
   generateMockDistribution,
   generateMockPosts,
+  generateMockSentimentByChannel,
   generateMockSentimentByCountry,
-  generateMockSentimentBySource,
   generateMockSentimentSeries,
   generateMockSeries,
   generateMockUsers,
@@ -54,7 +54,7 @@ type CardDescriptor =
   | { type: "sentiment"; span: CardSpan }
   | { type: "posts"; span: CardSpan }
   | { type: "authors"; span: CardSpan }
-  | { type: "sentiment-by-source"; span: CardSpan }
+  | { type: "sentiment-by-channel"; span: CardSpan }
   | { type: "sentiment-by-country"; span: CardSpan }
   | { type: "narrative"; span: CardSpan }
   | { type: "map"; span: CardSpan }
@@ -75,7 +75,7 @@ const CARDS: CardDescriptor[] = [
 
   { type: "posts", span: "narrow" },
   { type: "authors", span: "narrow" },
-  { type: "sentiment-by-source", span: "narrow" },
+  { type: "sentiment-by-channel", span: "narrow" },
   { type: "narrative", span: "narrow" },
 
   { type: "sentiment-by-country", span: "narrow" },
@@ -125,16 +125,16 @@ export default async function BrandReputationPage() {
               </ChartCard>
             );
 
-          case "sentiment-by-source":
+          case "sentiment-by-channel":
             return (
               <ChartCard
                 key={i}
                 className={className}
-                title="Sentiment by Source"
-                description="Breakdown by source type"
+                title="Sentiment by Channel"
+                description="Breakdown by channel type"
               >
                 <StackedBarChart
-                  data={generateMockSentimentBySource("by-source", 400)}
+                  data={generateMockSentimentByChannel("by-channel", 400)}
                   series={SENTIMENT_SERIES}
                 />
               </ChartCard>

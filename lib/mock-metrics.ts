@@ -80,22 +80,22 @@ export function generateMockSentimentSeries(
   });
 }
 
-type SentimentBySource = {
+type SentimentBreakdown = {
   label: string;
   positive: number;
   negative: number;
   neutral: number;
 };
 
-const SOURCE_TYPES = ["news", "twitter", "blog", "youtube"] as const;
+const CHANNEL_TYPES = ["news", "twitter", "blog", "youtube"] as const;
 
-export function generateMockSentimentBySource(
+export function generateMockSentimentByChannel(
   seed: string,
   scale: number,
-): SentimentBySource[] {
+): SentimentBreakdown[] {
   const random = seededRandom(seed);
 
-  return SOURCE_TYPES.map((label) => ({
+  return CHANNEL_TYPES.map((label) => ({
     label,
     positive: Math.round(random() * scale),
     negative: Math.round(random() * scale * 0.25),
@@ -114,7 +114,7 @@ const SENTIMENT_COUNTRIES = [
 export function generateMockSentimentByCountry(
   seed: string,
   scale: number,
-): SentimentBySource[] {
+): SentimentBreakdown[] {
   const random = seededRandom(seed);
 
   return SENTIMENT_COUNTRIES.map((label) => ({
@@ -165,11 +165,11 @@ export const METRIC_SUBTITLES: Record<
 };
 
 const MOCK_USERS = [
-  { name: "Ava Sinclair", username: "avasinclair", source: "x" },
-  { name: "Marcus Webb", username: "marcuswebb", source: "instagram" },
-  { name: "Priya Nair", username: "priyanair", source: "youtube" },
-  { name: "Diego Ramos", username: "diegoramos", source: "linkedin" },
-  { name: "Yuki Tanaka", username: "yukitanaka", source: "tiktok" },
+  { name: "Ava Sinclair", username: "avasinclair", channel: "x" },
+  { name: "Marcus Webb", username: "marcuswebb", channel: "instagram" },
+  { name: "Priya Nair", username: "priyanair", channel: "youtube" },
+  { name: "Diego Ramos", username: "diegoramos", channel: "linkedin" },
+  { name: "Yuki Tanaka", username: "yukitanaka", channel: "tiktok" },
 ] as const;
 
 export function generateMockUsers(seed: string): SocialUser[] {
@@ -181,7 +181,7 @@ export function generateMockUsers(seed: string): SocialUser[] {
       id: `${seed}-${i}`,
       name: user.name,
       username: user.username,
-      source: user.source,
+      channel: user.channel,
       followers: Math.round(1_000 + random() * 500_000),
       status,
       statusLabel: titleCaseFromKebab(status),
@@ -192,27 +192,27 @@ export function generateMockUsers(seed: string): SocialUser[] {
 const MOCK_POST_TEXTS = [
   {
     text: "Just tried the new product update and honestly it's a huge improvement over the last version. The onboarding flow feels so much smoother now.",
-    source: "x",
+    channel: "x",
     sentiment: "positive",
   },
   {
     text: "Support took three days to respond to a critical billing issue. Really disappointed with how this was handled given how much we pay for this plan.",
-    source: "news",
+    channel: "news",
     sentiment: "negative",
   },
   {
     text: "Comparing a few vendors this quarter. Feature set looks solid but pricing is on the higher end compared to competitors in the same space.",
-    source: "linkedin",
+    channel: "linkedin",
     sentiment: "neutral",
   },
   {
     text: "The team behind this has been incredibly responsive on feedback. Shipped two of our requested features within a month of us asking.",
-    source: "blog",
+    channel: "blog",
     sentiment: "positive",
   },
   {
     text: "Outage lasted almost two hours during peak traffic today. Status page wasn't updated until well after customers started reporting it.",
-    source: "reddit",
+    channel: "reddit",
     sentiment: "negative",
   },
 ] as const;
@@ -223,7 +223,7 @@ export function generateMockPosts(seed: string): SocialPost[] {
   return MOCK_POST_TEXTS.map((post, i) => ({
     id: `${seed}-${i}`,
     text: post.text,
-    source: post.source,
+    channel: post.channel,
     sentiment: post.sentiment,
     sentimentLabel: titleCaseFromKebab(post.sentiment),
     impressions: Math.round(1_000 + random() * 2_000_000),
@@ -251,7 +251,7 @@ export function generateMockPostsTable(seed: string, count: number): PostTableRo
       author: author.name,
       countryCode: country.countryCode,
       countryName: country.countryName,
-      channel: post.source,
+      channel: post.channel,
       sentiment: post.sentiment,
       sentimentLabel: titleCaseFromKebab(post.sentiment),
       impressions: Math.round(1_000 + random() * 2_000_000),

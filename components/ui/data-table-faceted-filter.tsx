@@ -20,7 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 export type FacetedFilterOption = {
   label: string
   value: string
-  /** Rendered as-is, so callers control size/color (e.g. a source-platform
+  /** Rendered as-is, so callers control size/color (e.g. a channel-platform
    * icon vs. a sentiment icon tinted with its status color). */
   icon?: ReactNode
 }

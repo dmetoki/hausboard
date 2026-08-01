@@ -31,11 +31,10 @@ declare module "@tanstack/react-table" {
 }
 
 // The posts table's own row shape — a superset of `SocialPost` (id, text,
-// sentiment, sentimentLabel, impressions) plus `date`, `author`, and
-// `channel` (this table's own nomenclature for what `SocialPost` still
-// calls `source`). Kept separate from `SocialPost` itself so this table's
-// needs don't leak into `PostList`/the brand-reputation page, which only
-// ever needed the smaller shape.
+// channel, sentiment, sentimentLabel, impressions) plus `date` and `author`.
+// Kept separate from `SocialPost` itself so this table's needs don't leak
+// into `PostList`/the brand-reputation page, which only ever needed the
+// smaller shape.
 export type PostTableRow = {
   id: string;
   text: string;

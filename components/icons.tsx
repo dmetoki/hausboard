@@ -23,7 +23,7 @@ function Google(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-// Social/source-type icons below are Font Awesome Free (CC BY 4.0),
+// Social/channel-type icons below are Font Awesome Free (CC BY 4.0),
 // https://fontawesome.com/license/free — attribution kept per license.
 
 function Blog(props: React.SVGProps<SVGSVGElement>) {
