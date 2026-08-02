@@ -68,10 +68,10 @@ function StatusPill({
         color: `var(${color})`,
       }}
     >
-      <span className="col-start-1 row-start-1 opacity-100 transition-opacity group-hover/pill:opacity-0">
+      <span className="pointer-events-none col-start-1 row-start-1 opacity-100 transition-opacity group-hover/pill:opacity-0">
         {STATUS_LABELS[status]}
       </span>
-      <span className="col-start-1 row-start-1 opacity-0 transition-opacity group-hover/pill:opacity-100">
+      <span className="pointer-events-none col-start-1 row-start-1 opacity-0 transition-opacity group-hover/pill:opacity-100">
         {elapsedLabel(status, elapsedMinutes)}
       </span>
     </span>
