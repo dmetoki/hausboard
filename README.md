@@ -174,7 +174,7 @@ type SocialUser = {
   name: string;
   username: string;
   followers: number;
-  source: keyof typeof Icons;              // see `Icons`, components/icons.tsx
+  channel: keyof typeof Icons;             // see `Icons`, components/icons.tsx
   status: "promoter" | "detractor";
   statusLabel: string;                     // display text for `status` — caller-owned, see below
 };
@@ -182,8 +182,8 @@ type SocialUser = {
 <UserList users={SocialUser[]} />
 ```
 
-**Contract:** `source` must be a key that exists on `Icons`; falls back to
-`Icons.unknown` if not (a real runtime safety net — `source` may come from
+**Contract:** `channel` must be a key that exists on `Icons`; falls back to
+`Icons.unknown` if not (a real runtime safety net — `channel` may come from
 data that doesn't match the compile-time union). `status` drives a fixed
 status-color badge (promoter → the positive color, detractor → the negative
 color) — icon/color are component-owned, but the display text is not:
@@ -196,7 +196,7 @@ rendered as-is.
 type SocialPost = {
   id: string;
   text: string;
-  source: keyof typeof Icons;
+  channel: keyof typeof Icons;
   impressions: number;
   likes: number;
   sentiment: "positive" | "negative" | "neutral";
@@ -206,7 +206,7 @@ type SocialPost = {
 <PostList posts={SocialPost[]} />
 ```
 
-**Contract:** same `source`/`Icons` fallback and `sentimentLabel`
+**Contract:** same `channel`/`Icons` fallback and `sentimentLabel`
 caller-owns-the-text contract as `UserList`. `text` is clamped to 2 lines
 visually (`line-clamp-2`) — pass the full text, don't pre-truncate it
 yourself.
@@ -286,7 +286,7 @@ free-form prose sometimes beats a chart shape.
 ### `IconBadge` / `StatusBadge` — shared circular icon badges
 
 Not mounted directly in the dashboard grid — `UserList`/`PostList` use these
-internally for the source-platform icon and the sentiment/status icon.
+internally for the channel-platform icon and the sentiment/status icon.
 
 ```ts
 <IconBadge
