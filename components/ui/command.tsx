@@ -5,6 +5,13 @@ import { Command as CommandPrimitive } from "cmdk"
 import { SearchIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
   return (
@@ -73,7 +80,7 @@ function CommandItem({ className, ...props }: React.ComponentProps<typeof Comman
     <CommandPrimitive.Item
       data-slot="command-item"
       className={cn(
-        "relative my-0.5 flex cursor-pointer items-center gap-3 px-2 py-1.5 text-xs outline-hidden select-none data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        "relative my-1 flex cursor-pointer items-center gap-3 px-2 py-1.5 text-xs outline-hidden select-none data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0",
         className
       )}
       {...props}
@@ -81,4 +88,72 @@ function CommandItem({ className, ...props }: React.ComponentProps<typeof Comman
   )
 }
 
-export { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList }
+function CommandDialog({
+  title = "Command Palette",
+  description = "Search for a command to run...",
+  children,
+  className,
+  showCloseButton = true,
+  ...props
+}: Omit<React.ComponentProps<typeof Dialog>, "children" | "render"> & {
+  title?: string
+  description?: string
+  className?: string
+  showCloseButton?: boolean
+  children?: React.ReactNode
+}) {
+  return (
+    <Dialog {...props}>
+      <DialogContent
+        className={cn("overflow-hidden p-0", className)}
+        showCloseButton={showCloseButton}
+      >
+        <DialogHeader className="sr-only">
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+        <Command className="**:data-[slot=command-input-wrapper]:h-auto">
+          {children}
+        </Command>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function CommandSeparator({
+  className,
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive.Separator>) {
+  return (
+    <CommandPrimitive.Separator
+      data-slot="command-separator"
+      className={cn("-mx-1 my-1 h-px bg-border", className)}
+      {...props}
+    />
+  )
+}
+
+function CommandShortcut({ className, ...props }: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="command-shortcut"
+      className={cn(
+        "ml-auto text-xs tracking-widest text-muted-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut,
+}

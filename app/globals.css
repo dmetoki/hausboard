@@ -2,6 +2,12 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* streamdown renders markdown by generating Tailwind class names at
+   runtime from inside node_modules, which Tailwind's content scanner
+   ignores by default (it's git-ignored) — without this, list/heading/etc.
+   styles never make it into the compiled CSS. */
+@source "../node_modules/streamdown/dist/**/*.js";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
