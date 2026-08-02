@@ -19,8 +19,8 @@ export function Header() {
         <Nav className="ml-8" />
         <div className="ml-auto flex h-9 items-center gap-1.5">
           <DateRangePicker />
-          <NotificationsMenu />
           <UserMenu />
+          <NotificationsMenu />
           <MobileNav />
         </div>
       </div>

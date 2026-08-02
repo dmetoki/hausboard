@@ -98,6 +98,7 @@ export function BotConsole() {
           onCreate={handleCreateAgent}
           onRename={handleRenameAgent}
           onDelete={handleDeleteAgent}
+          triggerClassName="w-full"
         />
       </aside>
     </div>

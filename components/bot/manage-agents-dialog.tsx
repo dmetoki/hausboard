@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 import type { Agent } from "@/lib/mock-bot";
 
 export function ManageAgentsDialog({
@@ -21,11 +22,13 @@ export function ManageAgentsDialog({
   onCreate,
   onRename,
   onDelete,
+  triggerClassName,
 }: {
   agents: Agent[];
   onCreate: (name: string, description: string) => void;
   onRename: (id: string, name: string) => void;
   onDelete: (id: string) => void;
+  triggerClassName?: string;
 }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -40,7 +43,7 @@ export function ManageAgentsDialog({
   return (
     <Dialog>
       <DialogTrigger
-        render={<Button variant="outline" size="sm" className="w-full" />}
+        render={<Button variant="outline" size="xs" className={cn(triggerClassName)} />}
       >
         Manage Agents
       </DialogTrigger>

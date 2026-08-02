@@ -1,14 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MOCK_NOTIFICATIONS } from "@/lib/mock-metrics";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -35,9 +34,15 @@ export function NotificationsMenu() {
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-        </DropdownMenuGroup>
+        <div className="flex items-center justify-between px-1.5 py-1">
+          <span className="text-xs font-medium text-muted-foreground">Notifications</span>
+          <Link
+            href="/inbox"
+            className="text-[11px] font-medium text-muted-foreground hover:text-foreground"
+          >
+            View all
+          </Link>
+        </div>
         <DropdownMenuSeparator />
         {MOCK_NOTIFICATIONS.map((notification) => (
           <DropdownMenuItem

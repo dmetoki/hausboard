@@ -413,7 +413,7 @@ export const HIGHLIGHT_METRICS = [
   { label: "Unique Authors", value: "1,204" },
 ] as const;
 
-type NotificationSeed = {
+export type NotificationSeed = {
   id: string;
   title: string;
   description: string;
