@@ -37,49 +37,6 @@ export function generateMockSeries(seed: string, points = 12): MetricPoint[] {
   });
 }
 
-export function generateMockDistribution(
-  seed: string,
-  labels: readonly string[],
-): Array<{ label: string; value: number }> {
-  const random = seededRandom(seed);
-  return labels.map((label) => ({
-    label,
-    value: Math.round(10 + random() * 90),
-  }));
-}
-
-type SentimentPoint = {
-  date: string;
-  positive: number;
-  negative: number;
-  neutral: number;
-};
-
-export function generateMockSentimentSeries(
-  seed: string,
-  scale: number,
-  points = 12,
-): SentimentPoint[] {
-  const random = seededRandom(seed);
-  const start = new Date(2026, 5, 1);
-
-  return Array.from({ length: points }, (_, i) => {
-    const date = new Date(start);
-    date.setDate(start.getDate() + i);
-
-    const positive = Math.round(random() * scale);
-    const negative = Math.round(random() * scale * 0.3);
-    const neutral = Math.round(random() * scale * 0.5);
-
-    return {
-      date: date.toISOString().slice(0, 10),
-      positive,
-      negative,
-      neutral,
-    };
-  });
-}
-
 type SentimentBreakdown = {
   label: string;
   positive: number;

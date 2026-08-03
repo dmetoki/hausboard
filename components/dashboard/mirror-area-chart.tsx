@@ -15,12 +15,13 @@ import { SeriesTooltipRows } from "@/components/dashboard/chart-tooltip";
 import { compactNumberFormatter } from "@/lib/utils";
 
 /** One row of data — must include `xKey` plus a numeric value for every
- * `series[].key`. Not typed stricter than this so callers can pass whatever
+ * `series[].field`. Not typed stricter than this so callers can pass whatever
  * shape their series config expects. */
 export type MirrorAreaChartPoint = Record<string, string | number>;
 
 export type MirrorAreaChartSeries = {
-  key: string;
+  /** Property name to read off each `MirrorAreaChartPoint` for this series. */
+  field: string;
   label: string;
   /** Any valid CSS color, e.g. `var(--chart-positive)`. */
   color: string;
@@ -45,7 +46,7 @@ function niceTicksExcludingZero(
   const max = Math.max(
     1,
     ...data.flatMap((point) =>
-      series.map(({ key }) => Number(point[key]) || 0),
+      series.map(({ field }) => Number(point[field]) || 0),
     ),
   );
   return [0.25, 0.5, 0.75, 1].map((fraction) => Math.round(max * fraction));
@@ -163,10 +164,10 @@ function MirrorHalf({
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={CHART_MARGIN} syncId={syncId}>
           <defs>
-            {series.map(({ key, color }) => (
+            {series.map(({ field, color }) => (
               <linearGradient
-                key={key}
-                id={`mirror-${key}-${gradientSuffix}`}
+                key={field}
+                id={`mirror-${field}-${gradientSuffix}`}
                 x1="0"
                 y1={reversed ? "1" : "0"}
                 x2="0"
@@ -208,14 +209,14 @@ function MirrorHalf({
               />
             )}
           />
-          {series.map(({ key, color }) => (
+          {series.map(({ field, color }) => (
             <Area
-              key={key}
+              key={field}
               type="monotone"
-              dataKey={key}
+              dataKey={field}
               stroke={color}
               strokeWidth={2}
-              fill={`url(#mirror-${key}-${gradientSuffix})`}
+              fill={`url(#mirror-${field}-${gradientSuffix})`}
               dot={false}
               activeDot={{ r: 3, stroke: "none" }}
             />
@@ -281,7 +282,7 @@ function MirrorAxis({
           {/* Invisible — present only so this chart's category scale gets the
               same point padding the two real charts get from their Area
               series, keeping tick x-positions aligned with the real data. */}
-          <Area dataKey={series[0]?.key} stroke="none" fill="none" dot={false} />
+          <Area dataKey={series[0]?.field} stroke="none" fill="none" dot={false} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
@@ -293,7 +294,7 @@ function MirrorAxis({
  * (reversed y-axis) so it grows downward from the seam. `top` and `bottom`
  * must cover the same x sequence. `topLabel`/`bottomLabel` identify each
  * half in its tooltip (next to the x value) rather than as a visible chart
- * title. `series` describes every line drawn in *both* halves (key, label,
+ * title. `series` describes every line drawn in *both* halves (field, label,
  * color) — the component itself carries no domain-specific knowledge (no
  * fixed field names, colors, or labels), so it can plot any pair of
  * multi-series time-indexed datasets.

@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
 import { ChartCard } from "@/components/dashboard/chart-card";
 import { PostsTable } from "@/components/posts/posts-table";
+
+export const metadata: Metadata = {
+  title: "Posts",
+};
 
 export default async function PostsPage() {
   await auth.protect();

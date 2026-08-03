@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
 import { InboxConsole } from "@/components/inbox/inbox-console";
 import { DEFAULT_AGENT_TASKS } from "@/lib/mock-inbox";
 import { MOCK_NOTIFICATIONS } from "@/lib/mock-metrics";
+
+export const metadata: Metadata = {
+  title: "Inbox",
+};
 
 export default async function InboxPage() {
   await auth.protect();

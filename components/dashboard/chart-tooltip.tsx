@@ -48,11 +48,11 @@ export function SeriesTooltipRows({
 }) {
   return (
     <div className="flex flex-col gap-0.5">
-      {series.map(({ key, label, color }) => {
-        const entry = payload?.find((item) => item.dataKey === key);
+      {series.map(({ field, label, color }) => {
+        const entry = payload?.find((item) => item.dataKey === field);
         if (!entry || typeof entry.value !== "number") return null;
         return (
-          <div key={key} className="flex items-center justify-between gap-3">
+          <div key={field} className="flex items-center justify-between gap-3">
             <span className="flex items-center gap-1.5 text-muted-foreground">
               <span className="size-2 shrink-0" style={{ backgroundColor: color }} />
               {label}

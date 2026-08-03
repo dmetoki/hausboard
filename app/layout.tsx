@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hausboard",
+  title: { template: "%s · Hausboard", default: "Hausboard" },
   description: "Hausboard",
 };
 

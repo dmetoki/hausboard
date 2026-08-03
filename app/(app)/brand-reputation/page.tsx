@@ -1,28 +1,24 @@
-import { ChartNoAxesColumn, Layers } from "lucide-react";
+import type { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
 import { ChartCard } from "@/components/dashboard/chart-card";
 import { MiniChart } from "@/components/dashboard/mini-chart";
-import { DonutChart } from "@/components/dashboard/donut-chart";
 import { StatHighlight } from "@/components/dashboard/stat-highlight";
 import { StackedBarChart } from "@/components/dashboard/stacked-bar-chart";
+import { SentimentCard } from "@/components/dashboard/sentiment-card";
+import { SentimentDonutCard } from "@/components/dashboard/sentiment-donut-card";
 import { UserList } from "@/components/dashboard/user-list";
 import { PostList } from "@/components/dashboard/post-list";
 import { NarrativeSummary } from "@/components/dashboard/narrative-summary";
 import { WorldMap } from "@/components/dashboard/world-map";
 import { CountryScoreList } from "@/components/dashboard/country-score-list";
-import {
-  MirrorAreaChart,
-  type MirrorAreaChartSeries,
-} from "@/components/dashboard/mirror-area-chart";
+import { type MirrorAreaChartSeries } from "@/components/dashboard/mirror-area-chart";
 import {
   countryScoreListDataFromCountryBreakdown,
   DASHBOARD_METRICS,
   generateMockCountrySentimentBreakdown,
-  generateMockDistribution,
   generateMockPosts,
   generateMockSentimentByChannel,
   generateMockSentimentByCountry,
-  generateMockSentimentSeries,
   generateMockSeries,
   generateMockUsers,
   HIGHLIGHT_METRICS,
@@ -31,26 +27,24 @@ import {
   worldMapDataFromCountryBreakdown,
 } from "@/lib/mock-metrics";
 
-const SENTIMENT_SUBTITLE = "Positive vs. negative mentions";
+export const metadata: Metadata = {
+  title: "Brand Reputation",
+};
 
 // Sentiment is a fixed, status-style palette (green/red/gray) rather than the
 // generic --chart-1..5 categorical ramp — see the dataviz skill notes on
 // status colors in app/globals.css.
 const SENTIMENT_SERIES: MirrorAreaChartSeries[] = [
-  { key: "positive", label: "Positive", color: "var(--chart-positive)" },
-  { key: "negative", label: "Negative", color: "var(--chart-negative)" },
-  { key: "neutral", label: "Neutral", color: "var(--chart-neutral)" },
+  { field: "positive", label: "Positive", color: "var(--chart-positive)" },
+  { field: "negative", label: "Negative", color: "var(--chart-negative)" },
+  { field: "neutral", label: "Neutral", color: "var(--chart-neutral)" },
 ];
-
-// The two donut cards each have exactly 3 slices — reuse the fixed
-// sentiment palette for visual variety instead of the generic ramp.
-const DONUT_COLORS = ["--chart-positive", "--chart-negative", "--chart-neutral"];
 
 type Metric = (typeof DASHBOARD_METRICS)[number];
 type CardSpan = "narrow" | "wide";
 
 type CardDescriptor =
-  | { type: "donut"; span: CardSpan; title: Metric; categories: readonly string[] }
+  | { type: "sentiment-donut"; span: CardSpan; field: "impressions" | "volume" }
   | { type: "sentiment"; span: CardSpan }
   | { type: "posts"; span: CardSpan }
   | { type: "authors"; span: CardSpan }
@@ -69,9 +63,9 @@ type CardDescriptor =
 // the bottom of the component), since on mobile they need their own 2-column
 // sub-grid rather than the single-column stacking every other card gets.
 const CARDS: CardDescriptor[] = [
-  { type: "donut", span: "narrow", title: "Revenue", categories: ["Direct", "Referral", "Organic"] },
+  { type: "sentiment-donut", span: "narrow", field: "impressions" },
   { type: "sentiment", span: "wide" },
-  { type: "donut", span: "narrow", title: "New Signups", categories: ["Web", "Mobile", "Partner"] },
+  { type: "sentiment-donut", span: "narrow", field: "volume" },
 
   { type: "posts", span: "narrow" },
   { type: "authors", span: "narrow" },
@@ -195,44 +189,21 @@ export default async function BrandReputationPage() {
             );
 
           case "sentiment":
-            return (
-              <ChartCard
-                key={i}
-                className={className}
-                title="Sentiment"
-                description={SENTIMENT_SUBTITLE}
-              >
-                <MirrorAreaChart
-                  top={generateMockSentimentSeries("impressions", 4_000_000)}
-                  bottom={generateMockSentimentSeries("volume", 40)}
-                  series={SENTIMENT_SERIES}
-                  topLabel="Impressions"
-                  bottomLabel="Volume"
-                  topIcon={<ChartNoAxesColumn className="size-3" />}
-                  bottomIcon={<Layers className="size-3" />}
-                />
-              </ChartCard>
-            );
+            return <SentimentCard key={i} className={className} />;
 
-          case "donut":
+          case "sentiment-donut":
             return (
-              <ChartCard
+              <SentimentDonutCard
                 key={i}
                 className={className}
-                title={card.title}
-                description={METRIC_SUBTITLES[card.title]}
-                centerTitle
-                centerContent
-              >
-                <DonutChart
-                  data={generateMockDistribution(card.title, card.categories).map(
-                    (slice, i) => ({
-                      ...slice,
-                      fill: DONUT_COLORS[i % DONUT_COLORS.length],
-                    }),
-                  )}
-                />
-              </ChartCard>
+                field={card.field}
+                title={card.field === "impressions" ? "Impressions" : "Volume"}
+                description={
+                  card.field === "impressions"
+                    ? "Reach by sentiment"
+                    : "Mentions by sentiment"
+                }
+              />
             );
 
           case "metric":

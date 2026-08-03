@@ -12,6 +12,26 @@ export const compactNumberFormatter = new Intl.NumberFormat("en-US", {
   notation: "compact",
 })
 
+export function formatCompactNumber(value: number): string {
+  return compactNumberFormatter.format(value)
+}
+
+// Splits a compact-formatted number ("1.2M") into its digits and unit
+// suffix, so callers can render the suffix at a smaller size for legibility
+// instead of matching the digits' font size.
+export function formatCompactNumberParts(value: number): {
+  number: string
+  suffix: string
+} {
+  const parts = compactNumberFormatter.formatToParts(value)
+  const suffix = parts.find((part) => part.type === "compact")?.value ?? ""
+  const number = parts
+    .filter((part) => part.type !== "compact")
+    .map((part) => part.value)
+    .join("")
+  return { number, suffix }
+}
+
 // Turns a kebab-case status/sentiment value ("slightly-positive") into its
 // default display label ("Slightly Positive"). Used by data layers to derive
 // a label for the dashboard's status/sentiment fields instead of each

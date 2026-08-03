@@ -6,7 +6,7 @@ import { SeriesTooltipRows } from "@/components/dashboard/chart-tooltip";
 import { compactNumberFormatter } from "@/lib/utils";
 
 /** One row — must include `labelKey` plus a numeric value for every
- * `series[].key`. Same shape convention as `MirrorAreaChart`. */
+ * `series[].field`. Same shape convention as `MirrorAreaChart`. */
 export type StackedBarChartRow = Record<string, string | number>;
 
 const BAR_THICKNESS = 18;
@@ -77,8 +77,8 @@ function StackedBarRow({
                 />
               )}
             />
-            {series.map(({ key, color }) => (
-              <Bar key={key} dataKey={key} stackId="stack" fill={color} />
+            {series.map(({ field, color }) => (
+              <Bar key={field} dataKey={field} stackId="stack" fill={color} />
             ))}
           </BarChart>
         </ResponsiveContainer>
@@ -133,7 +133,7 @@ export function StackedBarChart({
   const domainMax = Math.max(
     1,
     ...data.map((row) =>
-      series.reduce((sum, { key }) => sum + (Number(row[key]) || 0), 0),
+      series.reduce((sum, { field }) => sum + (Number(row[field]) || 0), 0),
     ),
   );
 

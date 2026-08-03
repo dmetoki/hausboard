@@ -57,6 +57,7 @@ export function DateRangePicker() {
           weekdayFormat="narrow"
           selected={selected}
           onSelect={handleSelect}
+          defaultMonth={selected?.from}
           startMonth={minDate}
           endMonth={maxDate}
           disabled={{ before: minDate, after: maxDate }}

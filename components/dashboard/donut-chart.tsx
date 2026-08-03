@@ -2,6 +2,7 @@
 
 import { Cell, Label, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { ChartTooltip } from "@/components/dashboard/chart-tooltip";
+import { formatCompactNumberParts } from "@/lib/utils";
 
 export type DonutSlice = {
   label: string;
@@ -54,6 +55,7 @@ export function DonutChart({ data }: { data: DonutSlice[] }) {
                   return null;
                 }
                 const centerY = (viewBox.cy ?? 0) - 8;
+                const { number, suffix } = formatCompactNumberParts(total);
                 return (
                   <text
                     x={viewBox.cx}
@@ -66,7 +68,13 @@ export function DonutChart({ data }: { data: DonutSlice[] }) {
                       y={centerY}
                       className="fill-foreground text-[1.7rem] font-semibold"
                     >
-                      {total}
+                      {number}
+                      {suffix && " "}
+                      {suffix && (
+                        <tspan dy="0.2em" className="text-base font-medium">
+                          {suffix}
+                        </tspan>
+                      )}
                     </tspan>
                     <tspan
                       x={viewBox.cx}
