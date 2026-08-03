@@ -1,4 +1,5 @@
 import type { MirrorAreaChartSeries } from "@/components/dashboard/mirror-area-chart";
+import { formatCompactNumber } from "@/lib/utils";
 
 export function ChartTooltip({
   active,
@@ -27,7 +28,9 @@ export function ChartTooltip({
           style={{ backgroundColor: color }}
         />
       )}
-      <span className="font-semibold text-popover-foreground">{value}</span>
+      <span className="font-semibold text-popover-foreground">
+        {formatCompactNumber(value)}
+      </span>
       {label && <span className="text-muted-foreground">{label}</span>}
     </div>
   );
@@ -58,7 +61,7 @@ export function SeriesTooltipRows({
               {label}
             </span>
             <span className="font-semibold text-popover-foreground">
-              {entry.value.toLocaleString()}
+              {formatCompactNumber(entry.value)}
             </span>
           </div>
         );

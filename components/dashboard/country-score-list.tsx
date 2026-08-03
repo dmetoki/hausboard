@@ -7,7 +7,8 @@ export type CountryScore = {
   /** Two-letter ISO 3166-1 alpha-2 country code, e.g. "US". */
   countryCode: string;
   countryName: string;
-  /** Sign only, not a magnitude: negative < 0, neutral = 0, positive > 0. */
+  /** -5..5; only the sign (negative/zero/positive) drives this list's
+   * color — `scoreLabel` carries the finer-grained banding. */
   score: number;
   /** Display text for `score` — owned by the caller/data layer, not this
    * component, so wording can change (localization, rephrasing) without

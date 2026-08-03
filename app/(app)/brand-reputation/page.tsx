@@ -1,46 +1,27 @@
 import type { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
 import { ChartCard } from "@/components/dashboard/chart-card";
-import { MiniChart } from "@/components/dashboard/mini-chart";
 import { StatHighlight } from "@/components/dashboard/stat-highlight";
-import { StackedBarChart } from "@/components/dashboard/stacked-bar-chart";
 import { SentimentCard } from "@/components/dashboard/sentiment-card";
 import { SentimentDonutCard } from "@/components/dashboard/sentiment-donut-card";
+import { SentimentByChannelCard } from "@/components/dashboard/sentiment-by-channel-card";
+import { SentimentByCountryCard } from "@/components/dashboard/sentiment-by-country-card";
 import { UserList } from "@/components/dashboard/user-list";
 import { PostList } from "@/components/dashboard/post-list";
 import { NarrativeSummary } from "@/components/dashboard/narrative-summary";
-import { WorldMap } from "@/components/dashboard/world-map";
-import { CountryScoreList } from "@/components/dashboard/country-score-list";
-import { type MirrorAreaChartSeries } from "@/components/dashboard/mirror-area-chart";
+import { SentimentCountryScoreCard } from "@/components/dashboard/sentiment-country-score-card";
+import { SentimentWorldMapCard } from "@/components/dashboard/sentiment-world-map-card";
 import {
-  countryScoreListDataFromCountryBreakdown,
-  DASHBOARD_METRICS,
-  generateMockCountrySentimentBreakdown,
   generateMockPosts,
-  generateMockSentimentByChannel,
-  generateMockSentimentByCountry,
-  generateMockSeries,
   generateMockUsers,
   HIGHLIGHT_METRICS,
-  METRIC_SUBTITLES,
   MOCK_NARRATIVE_SUMMARY,
-  worldMapDataFromCountryBreakdown,
 } from "@/lib/mock-metrics";
 
 export const metadata: Metadata = {
   title: "Brand Reputation",
 };
 
-// Sentiment is a fixed, status-style palette (green/red/gray) rather than the
-// generic --chart-1..5 categorical ramp — see the dataviz skill notes on
-// status colors in app/globals.css.
-const SENTIMENT_SERIES: MirrorAreaChartSeries[] = [
-  { field: "positive", label: "Positive", color: "var(--chart-positive)" },
-  { field: "negative", label: "Negative", color: "var(--chart-negative)" },
-  { field: "neutral", label: "Neutral", color: "var(--chart-neutral)" },
-];
-
-type Metric = (typeof DASHBOARD_METRICS)[number];
 type CardSpan = "narrow" | "wide";
 
 type CardDescriptor =
@@ -52,8 +33,7 @@ type CardDescriptor =
   | { type: "sentiment-by-country"; span: CardSpan }
   | { type: "narrative"; span: CardSpan }
   | { type: "map"; span: CardSpan }
-  | { type: "country-score-list"; span: CardSpan }
-  | { type: "metric"; span: CardSpan; metric: Metric; color: string };
+  | { type: "country-score-list"; span: CardSpan };
 
 // The full dashboard grid, top to bottom, left to right — each card is
 // explicit about what it is and how wide it spans, so adding/removing/
@@ -83,11 +63,6 @@ function spanClassName(span: CardSpan) {
 
 export default async function BrandReputationPage() {
   await auth.protect();
-
-  // One payload, shared by both the map and the country list below — they
-  // render the same by-country breakdown two different ways rather than
-  // each fetching/generating their own copy of it.
-  const countryBreakdown = generateMockCountrySentimentBreakdown("country-mentions");
 
   return (
     <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-4">
@@ -120,35 +95,10 @@ export default async function BrandReputationPage() {
             );
 
           case "sentiment-by-channel":
-            return (
-              <ChartCard
-                key={i}
-                className={className}
-                title="Sentiment by Channel"
-                description="Breakdown by channel type"
-              >
-                <StackedBarChart
-                  data={generateMockSentimentByChannel("by-channel", 400)}
-                  series={SENTIMENT_SERIES}
-                />
-              </ChartCard>
-            );
+            return <SentimentByChannelCard key={i} className={className} />;
 
           case "sentiment-by-country":
-            return (
-              <ChartCard
-                key={i}
-                className={className}
-                title="Sentiment by Country"
-                description="Breakdown by top 5 countries"
-                stretch
-              >
-                <StackedBarChart
-                  data={generateMockSentimentByCountry("by-country", 400)}
-                  series={SENTIMENT_SERIES}
-                />
-              </ChartCard>
-            );
+            return <SentimentByCountryCard key={i} className={className} />;
 
           case "narrative":
             return (
@@ -163,30 +113,10 @@ export default async function BrandReputationPage() {
             );
 
           case "map":
-            return (
-              <ChartCard
-                key={i}
-                className={className}
-                title="Mentions by Country"
-                description="Where this period's mentions came from"
-              >
-                <WorldMap data={worldMapDataFromCountryBreakdown(countryBreakdown)} />
-              </ChartCard>
-            );
+            return <SentimentWorldMapCard key={i} className={className} />;
 
           case "country-score-list":
-            return (
-              <ChartCard
-                key={i}
-                className={className}
-                title="All Countries"
-                description="Sentiment across every monitored country"
-              >
-                <CountryScoreList
-                  countries={countryScoreListDataFromCountryBreakdown(countryBreakdown)}
-                />
-              </ChartCard>
-            );
+            return <SentimentCountryScoreCard key={i} className={className} />;
 
           case "sentiment":
             return <SentimentCard key={i} className={className} />;
@@ -204,22 +134,6 @@ export default async function BrandReputationPage() {
                     : "Mentions by sentiment"
                 }
               />
-            );
-
-          case "metric":
-            return (
-              <ChartCard
-                key={i}
-                className={className}
-                title={card.metric}
-                description={METRIC_SUBTITLES[card.metric]}
-              >
-                <MiniChart
-                  data={generateMockSeries(card.metric)}
-                  variant={card.span === "wide" ? "full" : "compact"}
-                  color={card.color}
-                />
-              </ChartCard>
             );
         }
       })}

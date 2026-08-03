@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
-import { getDailyBrandReputation, sumSentimentCounts } from "@/lib/brand-reputation";
+import { getBrandReputation } from "@/lib/brand-reputation";
 import type { MirrorAreaChartSeries } from "@/components/dashboard/mirror-area-chart";
 
 // Sentiment is a fixed, status-style palette (green/red/gray) rather than the
@@ -43,9 +43,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let days;
+  let data;
   try {
-    days = await getDailyBrandReputation(orgId, from, to);
+    data = await getBrandReputation(orgId, from, to);
   } catch (error) {
     console.error("Failed to load brand reputation data:", error);
     return NextResponse.json(
@@ -55,9 +55,11 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({
-    by_date: days,
+    by_date: data.byDate,
     series_config: SENTIMENT_SERIES,
-    impressions: sumSentimentCounts(days, "impressions"),
-    volume: sumSentimentCounts(days, "volume"),
+    impressions: data.impressions,
+    volume: data.volume,
+    by_country: data.byCountry,
+    by_channel: data.byChannel,
   });
 }

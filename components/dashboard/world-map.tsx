@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type MouseEvent } from "react";
+import { createPortal } from "react-dom";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 import { statusColorFromScore } from "@/lib/utils";
 
@@ -81,15 +82,17 @@ export function WorldMap({ data }: { data: CountryValue[] }) {
   const [hover, setHover] = useState<HoverState | null>(null);
   const byId = useMemo(() => new Map(data.map((d) => [d.id, d])), [data]);
 
+  // Viewport coordinates (not container-relative) — the tooltip is portaled
+  // to `document.body` and positioned `fixed`, so it isn't clipped by this
+  // component's own `overflow-hidden` (needed to crop the map's empty ocean
+  // band) or the card's `overflow-hidden` (for its rounded corners).
   function handleMove(event: MouseEvent<SVGPathElement>, entry?: CountryValue) {
     if (!entry) return;
-    const rect = event.currentTarget.ownerSVGElement?.getBoundingClientRect();
-    if (!rect) return;
     setHover({
       label: entry.label,
       mentions: entry.mentions,
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
+      x: event.clientX,
+      y: event.clientY,
     });
   }
 
@@ -142,15 +145,19 @@ export function WorldMap({ data }: { data: CountryValue[] }) {
           }
         </Geographies>
       </ComposableMap>
-      {hover && (
-        <div
-          className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-md border border-border bg-popover px-2.5 py-1.5 text-[11px] shadow-md"
-          style={{ left: hover.x, top: hover.y - 8 }}
-        >
-          <div className="font-medium text-popover-foreground">{hover.label}</div>
-          <div className="text-muted-foreground">{hover.mentions.toLocaleString()} mentions</div>
-        </div>
-      )}
+      {hover &&
+        createPortal(
+          <div
+            className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full rounded-md border border-border bg-popover px-2.5 py-1.5 text-[11px] shadow-md"
+            style={{ left: hover.x, top: hover.y - 8 }}
+          >
+            <div className="font-medium text-popover-foreground">{hover.label}</div>
+            <div className="text-muted-foreground">
+              {hover.mentions.toLocaleString()} mentions
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

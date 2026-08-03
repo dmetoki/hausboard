@@ -1,14 +1,7 @@
 import type { SocialUser } from "@/components/dashboard/user-list";
 import type { SocialPost } from "@/components/dashboard/post-list";
-import type { CountryValue } from "@/components/dashboard/world-map";
-import type { CountryScore } from "@/components/dashboard/country-score-list";
 import type { PostTableRow } from "@/components/posts/columns";
-import { titleCaseFromKebab } from "@/lib/utils";
-
-export type MetricPoint = {
-  label: string;
-  value: number;
-};
+import { COUNTRY_CODES, titleCaseFromKebab } from "@/lib/utils";
 
 // Deterministic (not Math.random()) so server-rendered mock data matches
 // what the client receives as a prop — avoids hydration mismatches.
@@ -23,103 +16,6 @@ function seededRandom(seed: string) {
     return hash / 0x7fffffff;
   };
 }
-
-export function generateMockSeries(seed: string, points = 12): MetricPoint[] {
-  const random = seededRandom(seed);
-  let value = 40 + random() * 40;
-
-  return Array.from({ length: points }, (_, i) => {
-    value = Math.max(5, value + (random() - 0.45) * 15);
-    return {
-      label: `Day ${i + 1}`,
-      value: Math.round(value),
-    };
-  });
-}
-
-type SentimentBreakdown = {
-  label: string;
-  positive: number;
-  negative: number;
-  neutral: number;
-};
-
-const CHANNEL_TYPES = ["news", "twitter", "blog", "youtube"] as const;
-
-export function generateMockSentimentByChannel(
-  seed: string,
-  scale: number,
-): SentimentBreakdown[] {
-  const random = seededRandom(seed);
-
-  return CHANNEL_TYPES.map((label) => ({
-    label,
-    positive: Math.round(random() * scale),
-    negative: Math.round(random() * scale * 0.25),
-    neutral: Math.round(random() * scale * 0.5),
-  }));
-}
-
-const SENTIMENT_COUNTRIES = [
-  "United States",
-  "United Kingdom",
-  "India",
-  "Brazil",
-  "Australia",
-] as const;
-
-export function generateMockSentimentByCountry(
-  seed: string,
-  scale: number,
-): SentimentBreakdown[] {
-  const random = seededRandom(seed);
-
-  return SENTIMENT_COUNTRIES.map((label) => ({
-    label,
-    positive: Math.round(random() * scale),
-    negative: Math.round(random() * scale * 0.25),
-    neutral: Math.round(random() * scale * 0.5),
-  }));
-}
-
-// `numericId` is the ISO 3166-1 NUMERIC code for the same country — matches
-// the `id` field on each feature in the world-atlas topology `WorldMap`
-// renders, which has no alpha-2 field of its own to match against.
-const COUNTRY_CODES = [
-  { countryCode: "US", countryName: "United States", numericId: "840" },
-  { countryCode: "GB", countryName: "United Kingdom", numericId: "826" },
-  { countryCode: "IN", countryName: "India", numericId: "356" },
-  { countryCode: "BR", countryName: "Brazil", numericId: "076" },
-  { countryCode: "AU", countryName: "Australia", numericId: "036" },
-  { countryCode: "CA", countryName: "Canada", numericId: "124" },
-  { countryCode: "DE", countryName: "Germany", numericId: "276" },
-  { countryCode: "FR", countryName: "France", numericId: "250" },
-  { countryCode: "JP", countryName: "Japan", numericId: "392" },
-  { countryCode: "MX", countryName: "Mexico", numericId: "484" },
-  { countryCode: "ES", countryName: "Spain", numericId: "724" },
-  { countryCode: "IT", countryName: "Italy", numericId: "380" },
-  { countryCode: "NL", countryName: "Netherlands", numericId: "528" },
-  { countryCode: "SE", countryName: "Sweden", numericId: "752" },
-  { countryCode: "KR", countryName: "South Korea", numericId: "410" },
-  { countryCode: "ZA", countryName: "South Africa", numericId: "710" },
-  { countryCode: "AR", countryName: "Argentina", numericId: "032" },
-  { countryCode: "NG", countryName: "Nigeria", numericId: "566" },
-] as const;
-
-export const DASHBOARD_METRICS = [
-  "Revenue",
-  "Active Users",
-  "New Signups",
-] as const;
-
-export const METRIC_SUBTITLES: Record<
-  (typeof DASHBOARD_METRICS)[number],
-  string
-> = {
-  Revenue: "Total revenue this period",
-  "Active Users": "Unique users this period",
-  "New Signups": "New accounts created",
-};
 
 const MOCK_USERS = [
   { name: "Ava Sinclair", username: "avasinclair", channel: "x" },
@@ -270,88 +166,6 @@ export async function fetchMockPosts(query: PostsQuery): Promise<PaginatedPosts>
     posts: sorted.slice(start, start + query.pageSize),
     totalCount: sorted.length,
   };
-}
-
-// Shape of the (eventual) real "mentions by country" API response — each
-// country's raw sentiment breakdown, alpha-2 coded. `mentions` is always the
-// sum of the other three; not stored separately by the source, just derived.
-type CountrySentimentBreakdown = {
-  id: string; // ISO 3166-1 alpha-2, e.g. "AR"
-  label: string;
-  positive: number;
-  neutral: number;
-  negative: number;
-  mentions: number;
-};
-
-export function generateMockCountrySentimentBreakdown(
-  seed: string,
-): CountrySentimentBreakdown[] {
-  const random = seededRandom(seed);
-
-  return COUNTRY_CODES.map(({ countryCode, countryName }) => {
-    const positive = Math.round(random() * 500);
-    const neutral = Math.round(random() * 200);
-    const negative = Math.round(random() * 150);
-
-    return {
-      id: countryCode,
-      label: countryName,
-      positive,
-      neutral,
-      negative,
-      mentions: positive + neutral + negative,
-    };
-  });
-}
-
-const NUMERIC_ID_BY_COUNTRY_CODE: Record<string, string> = Object.fromEntries(
-  COUNTRY_CODES.map(({ countryCode, numericId }) => [countryCode, numericId]),
-);
-
-// The one place this breakdown's positive/negative counts turn into a
-// diverging status score — both adapters below derive their score from this,
-// so `WorldMap` and `CountryScoreList` always agree on the same country.
-function scoreFromBreakdown(row: CountrySentimentBreakdown): number {
-  const diff = row.positive - row.negative;
-  return diff < 0 ? -5 : diff > 0 ? 5 : 0;
-}
-
-function scoreLabelFromScore(score: number): string {
-  return score < 0 ? "Negative" : score > 0 ? "Positive" : "Neutral";
-}
-
-// Turns the raw by-country breakdown into what `WorldMap` actually renders:
-// a diverging status score (not a magnitude) plus the numeric country id its
-// topology needs instead of alpha-2. Countries with no known numeric id are
-// dropped rather than rendered with a made-up id.
-export function worldMapDataFromCountryBreakdown(
-  rows: CountrySentimentBreakdown[],
-): CountryValue[] {
-  return rows.flatMap((row) => {
-    const numericId = NUMERIC_ID_BY_COUNTRY_CODE[row.id];
-    if (!numericId) return [];
-
-    return [
-      { id: numericId, label: row.label, score: scoreFromBreakdown(row), mentions: row.mentions },
-    ];
-  });
-}
-
-// Same breakdown, adapted for `CountryScoreList` instead — same score rule
-// as `worldMapDataFromCountryBreakdown`, so both cards reflect one payload.
-export function countryScoreListDataFromCountryBreakdown(
-  rows: CountrySentimentBreakdown[],
-): CountryScore[] {
-  return rows.map((row) => {
-    const score = scoreFromBreakdown(row);
-    return {
-      countryCode: row.id,
-      countryName: row.label,
-      score,
-      scoreLabel: scoreLabelFromScore(score),
-    };
-  });
 }
 
 export const MOCK_NARRATIVE_SUMMARY =

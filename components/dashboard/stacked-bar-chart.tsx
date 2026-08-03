@@ -121,6 +121,10 @@ function StackedBarAxis({ domainMax }: { domainMax: number }) {
  * colors, or labels baked in, so it can plot any labeled rows against any
  * series.
  */
+function rowTotal(row: StackedBarChartRow, series: MirrorAreaChartSeries[]) {
+  return series.reduce((sum, { field }) => sum + (Number(row[field]) || 0), 0);
+}
+
 export function StackedBarChart({
   data,
   series,
@@ -130,19 +134,18 @@ export function StackedBarChart({
   series: MirrorAreaChartSeries[];
   labelKey?: string;
 }) {
-  const domainMax = Math.max(
-    1,
-    ...data.map((row) =>
-      series.reduce((sum, { field }) => sum + (Number(row[field]) || 0), 0),
-    ),
+  // Largest bar first, regardless of the order `data` arrives in.
+  const sortedData = [...data].sort(
+    (a, b) => rowTotal(b, series) - rowTotal(a, series),
   );
+  const domainMax = Math.max(1, ...sortedData.map((row) => rowTotal(row, series)));
 
   return (
     <div
       className="flex h-full flex-col justify-between"
       style={{ gap: ROW_GAP }}
     >
-      {data.map((row) => (
+      {sortedData.map((row) => (
         <StackedBarRow
           key={String(row[labelKey])}
           row={row}

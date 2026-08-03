@@ -43,15 +43,72 @@ export function titleCaseFromKebab(value: string): string {
     .join(" ")
 }
 
-// A diverging status color by sign only (not magnitude) — negative < 0,
-// neutral = 0, positive > 0 — shared by any component that colors a score
-// this way (world map choropleth, country score list) instead of each
-// re-implementing the same three-way branch. Returns a bare --chart-*
+// A diverging status color, banded the same way `sentimentLabelFromScore`
+// buckets its "Neutral" label (-1..1) — shared by any component that colors
+// a score this way (world map choropleth, country score list) instead of
+// each re-implementing the same three-way branch. Returns a bare --chart-*
 // variable name; wrap in var(...) at the call site.
 export function statusColorFromScore(score: number): string {
-  if (score < 0) return "--chart-negative"
-  if (score > 0) return "--chart-positive"
+  if (score < -1) return "--chart-negative"
+  if (score > 1) return "--chart-positive"
   return "--chart-neutral"
+}
+
+// Buckets a -5..5 sentiment score (e.g. `by_country[].avg_sentiment`) into
+// its display label. Bands are asymmetric-inclusive at the boundaries
+// (-4/-1/1/4 each resolve to the more extreme of their two adjacent bands)
+// so every value in -5..5 maps to exactly one label.
+export function sentimentLabelFromScore(score: number): string {
+  if (score <= -4) return "Negative"
+  if (score < -1) return "Slightly Negative"
+  if (score <= 1) return "Neutral"
+  if (score < 4) return "Slightly Positive"
+  return "Positive"
+}
+
+// `numericId` is the ISO 3166-1 NUMERIC code for the same country — matches
+// the `id` field on each feature in the world-atlas topology `WorldMap`
+// renders, which has no alpha-2 field of its own to match against.
+export const COUNTRY_CODES = [
+  { countryCode: "US", countryName: "United States", numericId: "840" },
+  { countryCode: "GB", countryName: "United Kingdom", numericId: "826" },
+  { countryCode: "IN", countryName: "India", numericId: "356" },
+  { countryCode: "BR", countryName: "Brazil", numericId: "076" },
+  { countryCode: "AU", countryName: "Australia", numericId: "036" },
+  { countryCode: "CA", countryName: "Canada", numericId: "124" },
+  { countryCode: "DE", countryName: "Germany", numericId: "276" },
+  { countryCode: "FR", countryName: "France", numericId: "250" },
+  { countryCode: "JP", countryName: "Japan", numericId: "392" },
+  { countryCode: "MX", countryName: "Mexico", numericId: "484" },
+  { countryCode: "ES", countryName: "Spain", numericId: "724" },
+  { countryCode: "IT", countryName: "Italy", numericId: "380" },
+  { countryCode: "NL", countryName: "Netherlands", numericId: "528" },
+  { countryCode: "SE", countryName: "Sweden", numericId: "752" },
+  { countryCode: "KR", countryName: "South Korea", numericId: "410" },
+  { countryCode: "ZA", countryName: "South Africa", numericId: "710" },
+  { countryCode: "AR", countryName: "Argentina", numericId: "032" },
+  { countryCode: "NG", countryName: "Nigeria", numericId: "566" },
+] as const
+
+const COUNTRY_NAME_BY_CODE: Record<string, string> = Object.fromEntries(
+  COUNTRY_CODES.map(({ countryCode, countryName }) => [countryCode, countryName]),
+)
+
+/** Falls back to the raw code itself for countries outside the known list,
+ * so an unrecognized code still renders instead of disappearing. */
+export function countryNameFromCode(countryCode: string): string {
+  return COUNTRY_NAME_BY_CODE[countryCode] ?? countryCode
+}
+
+const NUMERIC_ID_BY_COUNTRY_CODE: Record<string, string> = Object.fromEntries(
+  COUNTRY_CODES.map(({ countryCode, numericId }) => [countryCode, numericId]),
+)
+
+/** Unlike `countryNameFromCode`, there's no sensible fallback here — `id`
+ * has to be a real world-atlas numeric id or `WorldMap` can't place it, so
+ * callers should drop countries this returns `undefined` for. */
+export function numericIdFromCountryCode(countryCode: string): string | undefined {
+  return NUMERIC_ID_BY_COUNTRY_CODE[countryCode]
 }
 
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/

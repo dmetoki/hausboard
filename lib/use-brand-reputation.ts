@@ -3,14 +3,21 @@
 import { useState } from "react";
 import useSWR from "swr";
 import type { MirrorAreaChartSeries } from "@/components/dashboard/mirror-area-chart";
-import type { DailySignalDocument, SentimentCounts } from "@/lib/brand-reputation";
+import type {
+  BreakdownTotal,
+  CountryBreakdownTotal,
+  DailyPoint,
+  SentimentCounts,
+} from "@/lib/brand-reputation";
 import { useFilters } from "@/context/filters-context";
 
 type BrandReputationResponse = {
-  by_date: DailySignalDocument[];
+  by_date: DailyPoint[];
   series_config: MirrorAreaChartSeries[];
   impressions: SentimentCounts;
   volume: SentimentCounts;
+  by_country: CountryBreakdownTotal[];
+  by_channel: BreakdownTotal[];
 };
 
 function toCompactDate(isoDate: string) {
@@ -68,6 +75,8 @@ export function useBrandReputation() {
     seriesConfig: data?.series_config ?? [],
     impressions: data?.impressions,
     volume: data?.volume,
+    byCountry: data?.by_country ?? [],
+    byChannel: data?.by_channel ?? [],
     // SWR's own `isLoading` isn't patched by `keepPreviousData` — it flips
     // true on every new key (i.e. every date range change) regardless of
     // whether `data` still holds the previous range's result. Gate on `data`
