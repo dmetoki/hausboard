@@ -1,5 +1,4 @@
 import type { SocialUser } from "@/components/dashboard/user-list";
-import type { SocialPost } from "@/components/dashboard/post-list";
 import { titleCaseFromKebab } from "@/lib/utils";
 
 // Deterministic (not Math.random()) so server-rendered mock data matches
@@ -39,48 +38,6 @@ export function generateMockUsers(seed: string): SocialUser[] {
       statusLabel: titleCaseFromKebab(status),
     };
   });
-}
-
-const MOCK_POST_TEXTS = [
-  {
-    text: "Just tried the new product update and honestly it's a huge improvement over the last version. The onboarding flow feels so much smoother now.",
-    channel: "x",
-    sentiment: "positive",
-  },
-  {
-    text: "Support took three days to respond to a critical billing issue. Really disappointed with how this was handled given how much we pay for this plan.",
-    channel: "news",
-    sentiment: "negative",
-  },
-  {
-    text: "Comparing a few vendors this quarter. Feature set looks solid but pricing is on the higher end compared to competitors in the same space.",
-    channel: "linkedin",
-    sentiment: "neutral",
-  },
-  {
-    text: "The team behind this has been incredibly responsive on feedback. Shipped two of our requested features within a month of us asking.",
-    channel: "blog",
-    sentiment: "positive",
-  },
-  {
-    text: "Outage lasted almost two hours during peak traffic today. Status page wasn't updated until well after customers started reporting it.",
-    channel: "reddit",
-    sentiment: "negative",
-  },
-] as const;
-
-export function generateMockPosts(seed: string): SocialPost[] {
-  const random = seededRandom(seed);
-
-  return MOCK_POST_TEXTS.map((post, i) => ({
-    id: `${seed}-${i}`,
-    text: post.text,
-    channel: post.channel,
-    sentiment: post.sentiment,
-    sentimentLabel: titleCaseFromKebab(post.sentiment),
-    impressions: Math.round(1_000 + random() * 2_000_000),
-    likes: Math.round(10 + random() * 5_000),
-  }));
 }
 
 export const MOCK_NARRATIVE_SUMMARY =

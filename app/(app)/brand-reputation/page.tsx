@@ -6,13 +6,12 @@ import { SentimentCard } from "@/components/dashboard/cards/sentiment-card";
 import { SentimentDonutCard } from "@/components/dashboard/cards/sentiment-donut-card";
 import { SentimentByChannelCard } from "@/components/dashboard/cards/sentiment-by-channel-card";
 import { SentimentByCountryCard } from "@/components/dashboard/cards/sentiment-by-country-card";
+import { RecentPostsCard } from "@/components/dashboard/cards/recent-posts-card";
 import { UserList } from "@/components/dashboard/user-list";
-import { PostList } from "@/components/dashboard/post-list";
 import { NarrativeSummary } from "@/components/dashboard/narrative-summary";
 import { SentimentCountryScoreCard } from "@/components/dashboard/cards/sentiment-country-score-card";
 import { SentimentWorldMapCard } from "@/components/dashboard/cards/sentiment-world-map-card";
 import {
-  generateMockPosts,
   generateMockUsers,
   HIGHLIGHT_METRICS,
   MOCK_NARRATIVE_SUMMARY,
@@ -71,16 +70,7 @@ export default async function BrandReputationPage() {
 
         switch (card.type) {
           case "posts":
-            return (
-              <ChartCard
-                key={i}
-                className={className}
-                title="Recent Posts"
-                description="Latest mentions this period"
-              >
-                <PostList posts={generateMockPosts("recent-posts").slice(0, 3)} />
-              </ChartCard>
-            );
+            return <RecentPostsCard key={i} className={className} />;
 
           case "authors":
             return (

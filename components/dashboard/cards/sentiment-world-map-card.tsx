@@ -16,14 +16,22 @@ export function SentimentWorldMapCard({ className }: { className?: string }) {
     if (!id) return [];
 
     const mentions = row.volume.positive + row.volume.negative + row.volume.neutral;
-    return [{ id, label: countryNameFromCode(row.label), score: row.avg_sentiment, mentions }];
+    return [
+      {
+        id,
+        countryCode: row.label,
+        label: countryNameFromCode(row.label),
+        score: row.avg_sentiment,
+        mentions,
+      },
+    ];
   });
 
   return (
     <ChartCard
       className={className}
-      title="Mentions by Country"
-      description="Where this period's mentions came from"
+      title="Posts by Country"
+      description="Where this period's posts came from"
     >
       {error ? (
         <p className="text-sm text-muted-foreground">Failed to load sentiment data.</p>

@@ -90,14 +90,20 @@ export const COUNTRY_CODES = [
   { countryCode: "NG", countryName: "Nigeria", numericId: "566" },
 ] as const
 
-const COUNTRY_NAME_BY_CODE: Record<string, string> = Object.fromEntries(
-  COUNTRY_CODES.map(({ countryCode, countryName }) => [countryCode, countryName]),
-)
+// `Intl.DisplayNames` covers the full ISO 3166-1 alpha-2 set natively (no
+// dependency, no maintaining our own list) — unlike `COUNTRY_CODES` above,
+// which is deliberately a small curated set (only what `WorldMap` needs a
+// numeric id for), this needs to resolve every country the data can contain.
+const regionNames = new Intl.DisplayNames(["en"], { type: "region" })
 
-/** Falls back to the raw code itself for countries outside the known list,
- * so an unrecognized code still renders instead of disappearing. */
+/** Falls back to the raw code itself for a code `Intl.DisplayNames` doesn't
+ * recognize, so it still renders instead of disappearing. */
 export function countryNameFromCode(countryCode: string): string {
-  return COUNTRY_NAME_BY_CODE[countryCode] ?? countryCode
+  try {
+    return regionNames.of(countryCode) ?? countryCode
+  } catch {
+    return countryCode
+  }
 }
 
 const NUMERIC_ID_BY_COUNTRY_CODE: Record<string, string> = Object.fromEntries(

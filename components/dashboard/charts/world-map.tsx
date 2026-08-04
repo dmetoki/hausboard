@@ -3,6 +3,7 @@
 import { useMemo, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
+import ReactCountryFlag from "react-country-flag";
 import { statusColorFromScore } from "@/lib/utils";
 
 const GEO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
@@ -66,17 +67,20 @@ export type CountryValue = {
   /** ISO 3166-1 numeric country code as a string, e.g. "840" for the US —
    * matches the `id` field on each feature in the world-atlas topology. */
   id: string;
+  /** ISO 3166-1 alpha-2 code, e.g. "US" — a different code system than `id`,
+   * needed for `react-country-flag` in the hover tooltip. */
+  countryCode: string;
   label: string;
   /** Drives the fill color — a diverging status scale, not a magnitude:
    * negative → the negative color, zero → neutral, positive → the positive
    * color. Only the sign matters, not how far from zero. */
   score: number;
-  /** Raw mention count for this country — shown in the hover tooltip, plays
+  /** Raw post count for this country — shown in the hover tooltip, plays
    * no part in color. */
   mentions: number;
 };
 
-type HoverState = { label: string; mentions: number; x: number; y: number };
+type HoverState = { label: string; countryCode: string; mentions: number; x: number; y: number };
 
 export function WorldMap({ data }: { data: CountryValue[] }) {
   const [hover, setHover] = useState<HoverState | null>(null);
@@ -90,6 +94,7 @@ export function WorldMap({ data }: { data: CountryValue[] }) {
     if (!entry) return;
     setHover({
       label: entry.label,
+      countryCode: entry.countryCode,
       mentions: entry.mentions,
       x: event.clientX,
       y: event.clientY,
@@ -151,9 +156,17 @@ export function WorldMap({ data }: { data: CountryValue[] }) {
             className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full rounded-md border border-border bg-popover px-2.5 py-1.5 text-[11px] shadow-md"
             style={{ left: hover.x, top: hover.y - 8 }}
           >
-            <div className="font-medium text-popover-foreground">{hover.label}</div>
+            <div className="flex items-center gap-1.5 font-medium text-popover-foreground">
+              <ReactCountryFlag
+                countryCode={hover.countryCode}
+                svg
+                style={{ width: "1em", height: "1em" }}
+                aria-label={hover.label}
+              />
+              {hover.label}
+            </div>
             <div className="text-muted-foreground">
-              {hover.mentions.toLocaleString()} mentions
+              {hover.mentions.toLocaleString()} posts
             </div>
           </div>,
           document.body,

@@ -8,12 +8,14 @@ import { countryNameFromCode, sentimentLabelFromScore } from "@/lib/utils";
 export function SentimentCountryScoreCard({ className }: { className?: string }) {
   const { byCountry, isLoading, error } = useBrandReputation();
 
-  const countries: CountryScore[] = byCountry.map((row) => ({
-    countryCode: row.label,
-    countryName: countryNameFromCode(row.label),
-    score: row.avg_sentiment,
-    scoreLabel: sentimentLabelFromScore(row.avg_sentiment),
-  }));
+  const countries: CountryScore[] = byCountry
+    .map((row) => ({
+      countryCode: row.label,
+      countryName: countryNameFromCode(row.label),
+      score: row.avg_sentiment,
+      scoreLabel: sentimentLabelFromScore(row.avg_sentiment),
+    }))
+    .sort((a, b) => a.countryName.localeCompare(b.countryName));
 
   return (
     <ChartCard

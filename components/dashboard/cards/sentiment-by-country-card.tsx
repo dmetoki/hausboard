@@ -1,13 +1,30 @@
 "use client";
 
+import ReactCountryFlag from "react-country-flag";
 import { ChartCard } from "@/components/dashboard/chart-card";
 import { StackedBarChart, type StackedBarChartRow } from "@/components/dashboard/charts/stacked-bar-chart";
 import { useBrandReputation } from "@/lib/use-brand-reputation";
+import { countryNameFromCode } from "@/lib/utils";
 
 const TOP_COUNTRIES = 5;
 
 function totalOf(counts: { positive: number; negative: number; neutral: number }) {
   return counts.positive + counts.negative + counts.neutral;
+}
+
+function renderCountryLabel(row: StackedBarChartRow) {
+  const countryCode = String(row.countryCode);
+  return (
+    <>
+      <ReactCountryFlag
+        countryCode={countryCode}
+        svg
+        style={{ width: "1em", height: "1em" }}
+        aria-label={String(row.label)}
+      />
+      {row.label}
+    </>
+  );
 }
 
 export function SentimentByCountryCard({ className }: { className?: string }) {
@@ -17,7 +34,8 @@ export function SentimentByCountryCard({ className }: { className?: string }) {
     .sort((a, b) => totalOf(b.impressions) - totalOf(a.impressions))
     .slice(0, TOP_COUNTRIES)
     .map((row) => ({
-      label: row.label,
+      label: countryNameFromCode(row.label),
+      countryCode: row.label,
       ...row.impressions,
     }));
 
@@ -33,7 +51,7 @@ export function SentimentByCountryCard({ className }: { className?: string }) {
       ) : isLoading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : (
-        <StackedBarChart data={data} series={seriesConfig} />
+        <StackedBarChart data={data} series={seriesConfig} renderLabel={renderCountryLabel} />
       )}
     </ChartCard>
   );

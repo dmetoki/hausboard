@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { MirrorAreaChartSeries } from "@/components/dashboard/charts/mirror-area-chart";
 import { SeriesTooltipRows } from "@/components/dashboard/charts/chart-tooltip";
@@ -40,17 +41,19 @@ function StackedBarRow({
   row,
   series,
   labelKey,
+  renderLabel,
   domainMax,
 }: {
   row: StackedBarChartRow;
   series: MirrorAreaChartSeries[];
   labelKey: string;
+  renderLabel?: (row: StackedBarChartRow) => ReactNode;
   domainMax: number;
 }) {
   return (
     <div className="relative hover:z-10">
-      <div className="mb-1 text-xs text-muted-foreground capitalize">
-        {row[labelKey]}
+      <div className="mb-1 flex items-center gap-1.5 text-xs text-muted-foreground capitalize">
+        {renderLabel ? renderLabel(row) : row[labelKey]}
       </div>
       <div style={{ height: BAR_THICKNESS }}>
         <ResponsiveContainer width="100%" height="100%">
@@ -129,10 +132,15 @@ export function StackedBarChart({
   data,
   series,
   labelKey = "label",
+  renderLabel,
 }: {
   data: StackedBarChartRow[];
   series: MirrorAreaChartSeries[];
   labelKey?: string;
+  /** Overrides the plain `row[labelKey]` text — e.g. a country flag ahead of
+   * the name. Component stays domain-agnostic: callers decide what a label
+   * looks like, this just renders whatever they return. */
+  renderLabel?: (row: StackedBarChartRow) => ReactNode;
 }) {
   // Largest bar first, regardless of the order `data` arrives in.
   const sortedData = [...data].sort(
@@ -151,6 +159,7 @@ export function StackedBarChart({
           row={row}
           series={series}
           labelKey={labelKey}
+          renderLabel={renderLabel}
           domainMax={domainMax}
         />
       ))}

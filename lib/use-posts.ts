@@ -4,6 +4,7 @@ import { useState } from "react";
 import useSWR from "swr";
 import type { PostRow, PostsSortField } from "@/lib/posts";
 import type { PostTableRow } from "@/components/posts/columns";
+import type { SocialPost } from "@/components/dashboard/post-list";
 import { Icons } from "@/components/icons";
 import { useFilters } from "@/context/filters-context";
 import { titleCaseFromKebab } from "@/lib/utils";
@@ -16,7 +17,7 @@ type PostsResponse = {
   page_count: number;
 };
 
-export type UsePostsParams = {
+type PostsFetchParams = {
   page: number;
   pageSize: number;
   sortBy: PostsSortField;
@@ -26,13 +27,15 @@ export type UsePostsParams = {
   channels: string[];
 };
 
+export type UsePostsParams = PostsFetchParams;
+
 function toCompactDate(isoDate: string) {
   return isoDate.replaceAll("-", "");
 }
 
 // The stored channel value doesn't always match the icon set's key (e.g.
 // Twitter's rebrand to X) — translated here, once, rather than forcing every
-// consumer of `PostTableRow` to know about the mismatch.
+// consumer to know about the mismatch.
 const CHANNEL_ICON_KEY: Record<string, keyof typeof Icons> = {
   twitter: "x",
 };
@@ -60,6 +63,18 @@ function toTableRow(row: PostRow): PostTableRow {
     sentimentLabel: titleCaseFromKebab(row.sentiment),
     impressions: row.impressions,
     date: row.published,
+  };
+}
+
+function toSocialPost(row: PostRow): SocialPost {
+  return {
+    id: row.id,
+    text: row.text,
+    channel: channelIconKey(row.channel),
+    impressions: row.impressions,
+    likes: row.likes,
+    sentiment: row.sentiment,
+    sentimentLabel: titleCaseFromKebab(row.sentiment),
   };
 }
 
@@ -93,12 +108,12 @@ async function fetcher([, from, to, page, pageSize, sortBy, sortOrder, search, s
   return res.json() as Promise<PostsResponse>;
 }
 
-export function usePosts(params: UsePostsParams) {
+/** Shared by every posts-endpoint consumer: holds the date range (same
+ * "last complete range" fix as `useBrandReputation`) and runs the SWR
+ * fetch. Callers map the raw `PostRow[]` into whatever shape they need. */
+function usePostsFetch(params: PostsFetchParams) {
   const { filters } = useFilters();
 
-  // Same "hold the last complete range" logic as `useBrandReputation` — see
-  // that hook for why the picker's partial mid-selection state can't be
-  // queried directly.
   const completeRange =
     filters?.from && filters?.to
       ? { from: filters.from, to: filters.to }
@@ -134,11 +149,41 @@ export function usePosts(params: UsePostsParams) {
   );
 
   return {
+    data,
+    error,
+    // Same SWR `isLoading`-vs-`keepPreviousData` fix as `useBrandReputation`.
+    isLoading: isLoading && data === undefined,
+  };
+}
+
+export function usePosts(params: UsePostsParams) {
+  const { data, error, isLoading } = usePostsFetch(params);
+
+  return {
     posts: (data?.posts ?? []).map(toTableRow),
     totalCount: data?.total_count ?? 0,
     pageCount: data?.page_count ?? 1,
-    // Same SWR `isLoading`-vs-`keepPreviousData` fix as `useBrandReputation`.
-    isLoading: isLoading && data === undefined,
+    isLoading,
+    error,
+  };
+}
+
+/** The "Recent Posts" card's data — same `/api/posts` endpoint, just the
+ * newest `limit` posts with no filters, rather than a dedicated endpoint. */
+export function useRecentPosts(limit: number) {
+  const { data, error, isLoading } = usePostsFetch({
+    page: 0,
+    pageSize: limit,
+    sortBy: "date",
+    sortOrder: "desc",
+    search: "",
+    sentiments: [],
+    channels: [],
+  });
+
+  return {
+    posts: (data?.posts ?? []).map(toSocialPost),
+    isLoading,
     error,
   };
 }

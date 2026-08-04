@@ -13,6 +13,7 @@ export type PostRow = {
   sentiment: PostSentiment;
   sentiment_score: number;
   impressions: number;
+  likes: number;
   /** `YYYYMMDD`, same convention as the daily signal collection. */
   published: string;
   url: string;
@@ -51,7 +52,7 @@ type PostDocument = {
   author: { name: string };
   channel: string;
   sentiment: { classification: PostSentiment; score: number };
-  public_metrics: { impression_count: number };
+  public_metrics: { impression_count: number; like_count: number };
   published: string;
   url: string;
 };
@@ -65,6 +66,7 @@ function postRowFromDocument(doc: PostDocument): PostRow {
     sentiment: doc.sentiment?.classification ?? "neutral",
     sentiment_score: doc.sentiment?.score ?? 0,
     impressions: doc.public_metrics?.impression_count ?? 0,
+    likes: doc.public_metrics?.like_count ?? 0,
     published: doc.published,
     url: doc.url,
   };
