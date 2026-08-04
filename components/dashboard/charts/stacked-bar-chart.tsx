@@ -1,8 +1,8 @@
 "use client";
 
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import type { MirrorAreaChartSeries } from "@/components/dashboard/mirror-area-chart";
-import { SeriesTooltipRows } from "@/components/dashboard/chart-tooltip";
+import type { MirrorAreaChartSeries } from "@/components/dashboard/charts/mirror-area-chart";
+import { SeriesTooltipRows } from "@/components/dashboard/charts/chart-tooltip";
 import { compactNumberFormatter } from "@/lib/utils";
 
 /** One row — must include `labelKey` plus a numeric value for every

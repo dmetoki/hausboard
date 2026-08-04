@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { SeriesTooltipRows } from "@/components/dashboard/chart-tooltip";
+import { SeriesTooltipRows } from "@/components/dashboard/charts/chart-tooltip";
 import { compactNumberFormatter } from "@/lib/utils";
 
 /** One row of data — must include `xKey` plus a numeric value for every

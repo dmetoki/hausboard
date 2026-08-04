@@ -2,7 +2,7 @@
 
 import { ChartNoAxesColumn, Layers } from "lucide-react";
 import { ChartCard } from "@/components/dashboard/chart-card";
-import { MirrorAreaChart, type MirrorAreaChartPoint } from "@/components/dashboard/mirror-area-chart";
+import { MirrorAreaChart, type MirrorAreaChartPoint } from "@/components/dashboard/charts/mirror-area-chart";
 import { useBrandReputation } from "@/lib/use-brand-reputation";
 
 const SENTIMENT_SUBTITLE = "Positive vs. negative mentions";

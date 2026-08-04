@@ -1,7 +1,7 @@
 "use client";
 
 import { ChartCard } from "@/components/dashboard/chart-card";
-import { StackedBarChart, type StackedBarChartRow } from "@/components/dashboard/stacked-bar-chart";
+import { StackedBarChart, type StackedBarChartRow } from "@/components/dashboard/charts/stacked-bar-chart";
 import { useBrandReputation } from "@/lib/use-brand-reputation";
 
 const TOP_COUNTRIES = 5;

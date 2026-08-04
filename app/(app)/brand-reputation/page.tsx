@@ -2,15 +2,15 @@ import type { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
 import { ChartCard } from "@/components/dashboard/chart-card";
 import { StatHighlight } from "@/components/dashboard/stat-highlight";
-import { SentimentCard } from "@/components/dashboard/sentiment-card";
-import { SentimentDonutCard } from "@/components/dashboard/sentiment-donut-card";
-import { SentimentByChannelCard } from "@/components/dashboard/sentiment-by-channel-card";
-import { SentimentByCountryCard } from "@/components/dashboard/sentiment-by-country-card";
+import { SentimentCard } from "@/components/dashboard/cards/sentiment-card";
+import { SentimentDonutCard } from "@/components/dashboard/cards/sentiment-donut-card";
+import { SentimentByChannelCard } from "@/components/dashboard/cards/sentiment-by-channel-card";
+import { SentimentByCountryCard } from "@/components/dashboard/cards/sentiment-by-country-card";
 import { UserList } from "@/components/dashboard/user-list";
 import { PostList } from "@/components/dashboard/post-list";
 import { NarrativeSummary } from "@/components/dashboard/narrative-summary";
-import { SentimentCountryScoreCard } from "@/components/dashboard/sentiment-country-score-card";
-import { SentimentWorldMapCard } from "@/components/dashboard/sentiment-world-map-card";
+import { SentimentCountryScoreCard } from "@/components/dashboard/cards/sentiment-country-score-card";
+import { SentimentWorldMapCard } from "@/components/dashboard/cards/sentiment-world-map-card";
 import {
   generateMockPosts,
   generateMockUsers,

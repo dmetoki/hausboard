@@ -332,21 +332,111 @@ filters panel). The 80% card holds `PostsTable`
 `swr` over `components/ui/table.tsx` (shadcn's plain-`<table>` primitives —
 `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`).
 
-**The swappable seam:** `fetchMockPosts` (`lib/mock-metrics.ts`) is written
-as a real `async` function taking the same query shape a real paginated
-endpoint would (`{ page, pageSize, sortBy, sortOrder, search }`) and
-returning `{ posts, totalCount }`, with a simulated delay so the loading
-state is genuinely exercised rather than resolving instantly. `PostsTable`
-uses `manualPagination`/`manualSorting` — it never sorts/slices data itself,
-it just asks `fetchMockPosts` for the page it wants. Swapping in a real
-backend later means replacing that one function; the table, columns, and
-`useSWR` wiring don't change.
+Backed by `POST /api/posts` (`app/api/posts/route.ts`) → `getPosts()`
+(`lib/posts.ts`), reading MongoDB's `{org_id}_legacy` collection — see
+[Data sources](#data-sources--mongodb-collections) below for the document
+shape and required indexes. `PostsTable` uses `manualPagination`/
+`manualSorting` — it never sorts/slices data itself, it just asks
+`usePosts()` (`lib/use-posts.ts`, an SWR hook) for the page it wants, with
+the current sort/search/sentiment/channel filters and the header date-range
+picker's range. That hook also maps each raw row into `PostTableRow`
+(`components/posts/columns.tsx`) — translating the stored `channel` value to
+an icon key (e.g. `"twitter"` → the `x` icon, since the platform rebrand
+doesn't match the stored value) and deriving `sentimentLabel` — plus filling
+in a **fixed placeholder country** (`"US"`/`"United States"`) since the
+`_legacy` collection has no per-post country field yet.
 
 Column definitions live in `components/posts/columns.tsx`, which also
-defines `PostTableRow` — a posts-table-specific shape (adds `date` and a
-computed `engagement`) kept separate from the smaller shared `SocialPost`
-type `PostList`/the brand-reputation page use, so this table's needs don't
-leak into that simpler component.
+defines `PostTableRow` — a posts-table-specific shape kept separate from the
+smaller shared `SocialPost` type `PostList`/the brand-reputation page use, so
+this table's needs don't leak into that simpler component.
+
+## Data sources — MongoDB collections
+
+Every collection lives in the `signal` database, one collection per org,
+named `{org_id}_<suffix>` (`org_id` is Clerk's org id, e.g.
+`org_2vQYwSEAwcIPnuyNGsdkMxvOske`). Both collections use `published` as a
+zero-padded `YYYYMMDD` **string** (not a `Date`) for date-range filtering —
+this is what every date-range-scoped API in the app (`/api/brand-reputation`,
+`/api/posts`) matches against, converting the header date picker's
+`YYYY-MM-DD` selection to this compact form before querying.
+
+### `{org_id}_daily` — one document per day, brand-reputation metrics
+
+Read by `getBrandReputation()` (`lib/brand-reputation.ts`), which does all
+its per-day, by-country, and by-channel summing inside a single `$facet`
+Mongo aggregation rather than in application code.
+
+```jsonc
+{
+  "_id": ObjectId,
+  "published": "20260601",           // YYYYMMDD string
+  "impressions": { "positive": 3759763, "negative": 1089611, "neutral": 1373423 },
+  "volume": { "positive": 27, "negative": 12, "neutral": 6 },
+  "by_country": [
+    {
+      "label": "US",                 // ISO 3166-1 alpha-2
+      "impressions": { "positive": 2103981, "negative": 601240, "neutral": 742110 },
+      "volume": { "positive": 14, "negative": 6, "neutral": 3 },
+      "avg_sentiment": 5             // -5..5, averaged across the requested date range
+    }
+    // ...one entry per country with any activity that day
+  ],
+  "by_channel": [
+    {
+      "label": "twitter",
+      "impressions": { "positive": 2210442, "negative": 703120, "neutral": 812004 },
+      "volume": { "positive": 16, "negative": 7, "neutral": 4 }
+      // no avg_sentiment — channel breakdown doesn't carry a sentiment score
+    }
+    // ...one entry per channel with any activity that day
+  ]
+}
+```
+
+`by_country`/`by_channel` entries are **not required to sum to the top-level
+`impressions`/`volume`** — treat the top-level fields as the source of truth
+and the breakdowns as a (possibly partial) attribution.
+
+**Required index:** `{ published: 1 }` — every query is a range scan on this
+field first.
+
+### `{org_id}_legacy` — one document per mention/post
+
+Read by `getPosts()` (`lib/posts.ts`) via a `$facet` aggregation (page of
+rows + total matching count in one round trip). Real fields observed in
+production data (see `lib/posts.ts` for the exact subset the app reads):
+
+```jsonc
+{
+  "_id": ObjectId,
+  "id": "kN_5ftOIRlQ",               // platform-native post id, not used by the app
+  "author": { "id": "...", "name": "Biogénesis Bagó Asia", "username": "...", "followers_count": 0 },
+  "channel": "youtube",              // one of: twitter, facebook, instagram, linkedin, news, tiktok, youtube
+  "created_at": "2026-07-20T03:08:32Z",
+  "public_metrics": { "impression_count": 5, "comment_count": 0, "like_count": 0, "share_count": null },
+  "published": "20260720",           // YYYYMMDD string — same convention as `_daily`
+  "sentiment": { "classification": "neutral", "score": 0, "reasoning": "..." },
+  "text": "...",
+  "url": "https://www.youtube.com/watch?v=kN_5ftOIRlQ"
+  // plus channel_specific, entities, lang, media_stored, media_type, run_id,
+  // step, topics — present in the source data but not read by the app today
+}
+```
+
+No country field exists on this collection today — the Posts table's
+country column is a fixed placeholder until one is added upstream.
+
+**Required index:** `{ published: 1 }`, same as `_daily`. If sentiment
+and/or channel filtering becomes a heavy usage pattern (both are exposed as
+independent filters in the Posts table), add compound indexes leading with
+whichever field is filtered, followed by `published`:
+`{ "sentiment.classification": 1, published: 1 }` and
+`{ channel: 1, published: 1 }` — a single combined index can't serve as the
+leading seek for both filters independently, so two separate indexes (not
+one three-field index) is the right shape here. The free-text `text` search
+uses `$regex`, which can't use either index; a `$text` index would be needed
+if search volume ever justifies it.
 
 ## Learn More
 

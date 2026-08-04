@@ -1,7 +1,7 @@
 "use client";
 
 import { Cell, Label, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { ChartTooltip } from "@/components/dashboard/chart-tooltip";
+import { ChartTooltip } from "@/components/dashboard/charts/chart-tooltip";
 import { formatCompactNumberParts } from "@/lib/utils";
 
 export type DonutSlice = {

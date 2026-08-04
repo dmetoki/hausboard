@@ -1,10 +1,10 @@
 "use client";
 
 import { ChartCard } from "@/components/dashboard/chart-card";
-import { DonutChart, type DonutSlice } from "@/components/dashboard/donut-chart";
+import { DonutChart, type DonutSlice } from "@/components/dashboard/charts/donut-chart";
 import { useBrandReputation } from "@/lib/use-brand-reputation";
 import type { SentimentCounts } from "@/lib/brand-reputation";
-import type { MirrorAreaChartSeries } from "@/components/dashboard/mirror-area-chart";
+import type { MirrorAreaChartSeries } from "@/components/dashboard/charts/mirror-area-chart";
 
 function toDonutSlices(
   counts: SentimentCounts | undefined,

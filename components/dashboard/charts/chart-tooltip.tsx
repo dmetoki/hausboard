@@ -1,4 +1,4 @@
-import type { MirrorAreaChartSeries } from "@/components/dashboard/mirror-area-chart";
+import type { MirrorAreaChartSeries } from "@/components/dashboard/charts/mirror-area-chart";
 import { formatCompactNumber } from "@/lib/utils";
 
 export function ChartTooltip({

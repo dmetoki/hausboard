@@ -1,7 +1,7 @@
 "use client";
 
 import { ChartCard } from "@/components/dashboard/chart-card";
-import { WorldMap, type CountryValue } from "@/components/dashboard/world-map";
+import { WorldMap, type CountryValue } from "@/components/dashboard/charts/world-map";
 import { useBrandReputation } from "@/lib/use-brand-reputation";
 import { countryNameFromCode, numericIdFromCountryCode } from "@/lib/utils";
 

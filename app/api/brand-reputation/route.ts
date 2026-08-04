@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getBrandReputation } from "@/lib/brand-reputation";
 import { resolveOrgAndDateRange } from "@/lib/request-org-and-date-range";
-import type { MirrorAreaChartSeries } from "@/components/dashboard/mirror-area-chart";
+import type { MirrorAreaChartSeries } from "@/components/dashboard/charts/mirror-area-chart";
 
 // Sentiment is a fixed, status-style palette (green/red/gray) rather than the
 // generic --chart-1..5 categorical ramp — see the dataviz skill notes on

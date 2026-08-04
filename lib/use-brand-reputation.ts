@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import useSWR from "swr";
-import type { MirrorAreaChartSeries } from "@/components/dashboard/mirror-area-chart";
+import type { MirrorAreaChartSeries } from "@/components/dashboard/charts/mirror-area-chart";
 import type {
   BreakdownTotal,
   CountryBreakdownTotal,

@@ -1,7 +1,7 @@
 "use client";
 
 import { ChartCard } from "@/components/dashboard/chart-card";
-import { CountryScoreList, type CountryScore } from "@/components/dashboard/country-score-list";
+import { CountryScoreList, type CountryScore } from "@/components/dashboard/charts/country-score-list";
 import { useBrandReputation } from "@/lib/use-brand-reputation";
 import { countryNameFromCode, sentimentLabelFromScore } from "@/lib/utils";
 
