@@ -23,7 +23,7 @@ export type BreakdownTotal = {
  * matched day's per-country score across the date range. */
 export type CountryBreakdownTotal = BreakdownTotal & { avg_sentiment: number };
 
-export type BrandReputationData = {
+type BrandReputationData = {
   byDate: DailyPoint[];
   impressions: SentimentCounts;
   volume: SentimentCounts;

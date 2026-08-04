@@ -1,6 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
 import { getBrandReputation } from "@/lib/brand-reputation";
+import { resolveOrgAndDateRange } from "@/lib/request-org-and-date-range";
 import type { MirrorAreaChartSeries } from "@/components/dashboard/mirror-area-chart";
 
 // Sentiment is a fixed, status-style palette (green/red/gray) rather than the
@@ -12,36 +12,14 @@ const SENTIMENT_SERIES: MirrorAreaChartSeries[] = [
   { field: "neutral", label: "Neutral", color: "var(--chart-neutral)" },
 ];
 
-const DATE_PATTERN = /^\d{8}$/;
-
-function isValidDate(value: unknown): value is string {
-  return typeof value === "string" && DATE_PATTERN.test(value);
-}
-
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
 
-  const { orgId: sessionOrgId } = await auth();
-  // Dev-only convenience: lets Postman/curl exercise this route without
-  // replicating Clerk session cookies. Strictly gated so a client-supplied
-  // org_id can never substitute for a real session in production.
-  const devOrgId =
-    process.env.NODE_ENV !== "production" ? body?.org_id : undefined;
-  const orgId = sessionOrgId ?? devOrgId;
-
-  if (!orgId) {
-    return NextResponse.json({ error: "No active organization" }, { status: 401 });
+  const resolved = await resolveOrgAndDateRange(body);
+  if (!resolved.ok) {
+    return NextResponse.json({ error: resolved.error }, { status: resolved.status });
   }
-
-  const from = body?.date_range?.from;
-  const to = body?.date_range?.to;
-
-  if (!isValidDate(from) || !isValidDate(to) || from > to) {
-    return NextResponse.json(
-      { error: "date_range.from and date_range.to are required as YYYYMMDD strings, with from <= to" },
-      { status: 400 },
-    );
-  }
+  const { orgId, from, to } = resolved;
 
   let data;
   try {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import useSWR from "swr";
 import {
   flexRender,
   getCoreRowModel,
@@ -21,7 +20,8 @@ import {
   Smile,
 } from "lucide-react";
 import { Icons } from "@/components/icons";
-import { fetchMockPosts } from "@/lib/mock-metrics";
+import { usePosts } from "@/lib/use-posts";
+import type { PostsSortField } from "@/lib/posts";
 import { getPostColumns } from "@/components/posts/columns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -75,12 +75,31 @@ const SENTIMENT_OPTIONS: FacetedFilterOption[] = [
   },
 ];
 
-// Only the channels actually present in the mock post pool — matches
-// `MOCK_POST_TEXTS` in lib/mock-metrics.ts.
-const CHANNEL_OPTIONS: FacetedFilterOption[] = (
-  ["x", "news", "linkedin", "blog", "reddit"] as const
-).map((channel) => {
-  const Icon = Icons[channel];
+// The channel values actually stored in the legacy mentions collection —
+// "twitter" is the stored value, but the icon set keys it as "x" (the
+// platform's rebrand), so the icon lookup is separate from the filter value.
+const CHANNEL_FILTER_VALUES = [
+  "twitter",
+  "facebook",
+  "instagram",
+  "linkedin",
+  "news",
+  "tiktok",
+  "youtube",
+] as const;
+
+const CHANNEL_FILTER_ICONS: Record<(typeof CHANNEL_FILTER_VALUES)[number], keyof typeof Icons> = {
+  twitter: "x",
+  facebook: "facebook",
+  instagram: "instagram",
+  linkedin: "linkedin",
+  news: "news",
+  tiktok: "tiktok",
+  youtube: "youtube",
+};
+
+const CHANNEL_OPTIONS: FacetedFilterOption[] = CHANNEL_FILTER_VALUES.map((channel) => {
+  const Icon = Icons[CHANNEL_FILTER_ICONS[channel]];
   return {
     label: channel[0].toUpperCase() + channel.slice(1),
     value: channel,
@@ -126,26 +145,15 @@ export function PostsTable() {
   const columns = useMemo(() => getPostColumns(), []);
   const sort = sorting[0];
 
-  // Keyed on every param the mock "endpoint" depends on — swapping
-  // `fetchMockPosts` for a real fetch later needs no change here.
-  const { data, isLoading } = useSWR(
-    ["posts", pageIndex, pageSize, sort?.id, sort?.desc, search, sentiments, channels],
-    () =>
-      fetchMockPosts({
-        page: pageIndex,
-        pageSize,
-        sortBy: sort?.id ?? "date",
-        sortOrder: sort?.desc === false ? "asc" : "desc",
-        search,
-        sentiments,
-        channels,
-      }),
-    { keepPreviousData: true },
-  );
-
-  const posts = data?.posts ?? [];
-  const totalCount = data?.totalCount ?? 0;
-  const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
+  const { posts, totalCount, pageCount, isLoading, error } = usePosts({
+    page: pageIndex,
+    pageSize,
+    sortBy: (sort?.id as PostsSortField) ?? "date",
+    sortOrder: sort?.desc === false ? "asc" : "desc",
+    search,
+    sentiments,
+    channels,
+  });
 
   const table = useReactTable({
     data: posts,
@@ -209,7 +217,13 @@ export function PostsTable() {
             ))}
           </TableHeader>
           <TableBody>
-            {posts.length === 0 && !isLoading ? (
+            {error ? (
+              <TableRow>
+                <TableCell colSpan={visibleColumnCount} className="h-24 text-center text-muted-foreground">
+                  Failed to load posts.
+                </TableCell>
+              </TableRow>
+            ) : posts.length === 0 && !isLoading ? (
               <TableRow>
                 <TableCell colSpan={visibleColumnCount} className="h-24 text-center text-muted-foreground">
                   No posts match your search.

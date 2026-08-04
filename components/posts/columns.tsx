@@ -39,11 +39,14 @@ export type PostTableRow = {
   id: string;
   text: string;
   author: string;
-  /** ISO 3166-1 alpha-2, e.g. "US" — same code system `CountryScoreList`
-   * uses, for the same `react-country-flag` rendering. */
+  /** ISO 3166-1 alpha-2, e.g. "US" — the source collection has no country
+   * data yet, so this is currently a fixed mock value (see `lib/use-posts.ts`),
+   * not derived from the post itself. */
   countryCode: string;
   countryName: string;
   channel: keyof typeof Icons;
+  /** Link to the original post — opened in a new tab from the channel icon. */
+  url: string;
   sentiment: "positive" | "negative" | "neutral";
   sentimentLabel: string;
   impressions: number;
@@ -124,7 +127,15 @@ export function getPostColumns(): ColumnDef<PostTableRow>[] {
       enableSorting: false,
       size: 40,
       cell: ({ row }) => (
-        <IconBadge icon={Icons[row.original.channel] ?? Icons.unknown} />
+        <a
+          href={row.original.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex cursor-pointer"
+          title="Open post"
+        >
+          <IconBadge icon={Icons[row.original.channel] ?? Icons.unknown} />
+        </a>
       ),
     },
     {
@@ -159,7 +170,11 @@ export function getPostColumns(): ColumnDef<PostTableRow>[] {
       header: "Author",
       meta: { label: "Author" },
       enableSorting: false,
-      cell: ({ row }) => <span className="text-foreground">{row.original.author}</span>,
+      cell: ({ row }) => (
+        <span className="block w-full truncate text-foreground" title={row.original.author}>
+          {row.original.author}
+        </span>
+      ),
     },
     {
       accessorKey: "impressions",

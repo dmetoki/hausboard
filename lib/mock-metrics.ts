@@ -1,7 +1,6 @@
 import type { SocialUser } from "@/components/dashboard/user-list";
 import type { SocialPost } from "@/components/dashboard/post-list";
-import type { PostTableRow } from "@/components/posts/columns";
-import { COUNTRY_CODES, titleCaseFromKebab } from "@/lib/utils";
+import { titleCaseFromKebab } from "@/lib/utils";
 
 // Deterministic (not Math.random()) so server-rendered mock data matches
 // what the client receives as a prop — avoids hydration mismatches.
@@ -82,90 +81,6 @@ export function generateMockPosts(seed: string): SocialPost[] {
     impressions: Math.round(1_000 + random() * 2_000_000),
     likes: Math.round(10 + random() * 5_000),
   }));
-}
-
-// A larger pool for the posts table (pagination/sorting need more than the
-// 5 curated posts above) — cycles the same `MOCK_POST_TEXTS` templates,
-// varying the numbers per row so rows aren't literal duplicates.
-export function generateMockPostsTable(seed: string, count: number): PostTableRow[] {
-  const random = seededRandom(seed);
-  const start = new Date(2026, 5, 1);
-
-  return Array.from({ length: count }, (_, i) => {
-    const post = MOCK_POST_TEXTS[i % MOCK_POST_TEXTS.length];
-    const author = MOCK_USERS[i % MOCK_USERS.length];
-    const country = COUNTRY_CODES[i % COUNTRY_CODES.length];
-    const date = new Date(start);
-    date.setDate(start.getDate() + i);
-
-    return {
-      id: `${seed}-${i}`,
-      text: post.text,
-      author: author.name,
-      countryCode: country.countryCode,
-      countryName: country.countryName,
-      channel: post.channel,
-      sentiment: post.sentiment,
-      sentimentLabel: titleCaseFromKebab(post.sentiment),
-      impressions: Math.round(1_000 + random() * 2_000_000),
-      date: date.toISOString().slice(0, 10),
-    };
-  });
-}
-
-const POSTS_TABLE_SIZE = 60;
-
-export type PostsQuery = {
-  page: number;
-  pageSize: number;
-  sortBy: string;
-  sortOrder: "asc" | "desc";
-  search: string;
-  /** Empty/omitted means "no filter", not "match nothing". */
-  sentiments?: string[];
-  channels?: string[];
-};
-
-export type PaginatedPosts = {
-  posts: PostTableRow[];
-  totalCount: number;
-};
-
-// The seam a real backend would replace — same query shape a real paginated
-// endpoint would take, same `{ posts, totalCount }` response shape, and a
-// real `await` (simulated latency) so callers can't accidentally depend on
-// this resolving synchronously.
-export async function fetchMockPosts(query: PostsQuery): Promise<PaginatedPosts> {
-  await new Promise((resolve) => setTimeout(resolve, 300));
-
-  const all = generateMockPostsTable("posts-table", POSTS_TABLE_SIZE);
-  const search = query.search.trim().toLowerCase();
-  const filtered = all.filter((post) => {
-    if (search && !post.text.toLowerCase().includes(search)) return false;
-    if (query.sentiments?.length && !query.sentiments.includes(post.sentiment)) return false;
-    if (query.channels?.length && !query.channels.includes(post.channel)) return false;
-    return true;
-  });
-
-  const sorted = [...filtered].sort((a, b) => {
-    const left = a[query.sortBy as keyof PostTableRow];
-    const right = b[query.sortBy as keyof PostTableRow];
-    const direction = query.sortOrder === "asc" ? 1 : -1;
-
-    if (typeof left === "number" && typeof right === "number") {
-      return (left - right) * direction;
-    }
-    if (typeof left === "string" && typeof right === "string") {
-      return left.localeCompare(right) * direction;
-    }
-    return 0;
-  });
-
-  const start = query.page * query.pageSize;
-  return {
-    posts: sorted.slice(start, start + query.pageSize),
-    totalCount: sorted.length,
-  };
 }
 
 export const MOCK_NARRATIVE_SUMMARY =
