@@ -1,6 +1,6 @@
 import { Frown, Smile, Users } from "lucide-react";
 import { Icons } from "@/components/icons";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IconBadge, StatusBadge } from "@/components/dashboard/icon-badge";
 import { compactNumberFormatter } from "@/lib/utils";
 
@@ -15,6 +15,8 @@ export type SocialUser = {
    * component, so wording can change (localization, rephrasing) without
    * touching the component. */
   statusLabel: string;
+  /** Falls back to `name`'s initials when absent or on load failure. */
+  profileImageUrl?: string;
 };
 
 // Promoter/detractor is a genuine status signal (like sentiment), so it
@@ -48,6 +50,7 @@ export function UserList({ users }: { users: SocialUser[] }) {
             className="flex items-center gap-3 py-3.5 first:pt-0 last:pb-0"
           >
             <Avatar>
+              <AvatarImage src={user.profileImageUrl} alt={user.name} />
               <AvatarFallback>{initials(user.name)}</AvatarFallback>
             </Avatar>
             <div className="flex min-w-0 flex-1 flex-col">

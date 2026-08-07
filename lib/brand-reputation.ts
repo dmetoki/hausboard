@@ -29,6 +29,14 @@ type BrandReputationData = {
   volume: SentimentCounts;
   byCountry: CountryBreakdownTotal[];
   byChannel: BreakdownTotal[];
+  /** Percentage (0-100) of the range's posts (`volume` total) that had any
+   * engagement — `sum(engaged_count) / sum(volume) * 100`. `0` when the
+   * range has no posts, not `NaN`/`Infinity`. */
+  engagementRate: number;
+  /** Average of each matched day's `unique_authors` count — an average, not
+   * a sum, since the same author posting on multiple days shouldn't inflate
+   * the range total. */
+  uniqueAuthors: number;
 };
 
 const ZERO_COUNTS: SentimentCounts = { positive: 0, negative: 0, neutral: 0 };
@@ -40,6 +48,8 @@ type RawTotalsGroup = {
   volume_positive: number;
   volume_negative: number;
   volume_neutral: number;
+  engaged_count_sum: number;
+  unique_authors_avg: number | null;
 };
 
 type RawBreakdownGroup = RawTotalsGroup & { _id: string; avg_sentiment?: number | null };
@@ -156,6 +166,8 @@ export async function getBrandReputation(
                   volume_positive: { $sum: "$volume.positive" },
                   volume_negative: { $sum: "$volume.negative" },
                   volume_neutral: { $sum: "$volume.neutral" },
+                  engaged_count_sum: { $sum: "$engaged_count" },
+                  unique_authors_avg: { $avg: "$unique_authors" },
                 },
               },
             ],
@@ -173,12 +185,17 @@ export async function getBrandReputation(
     .toArray();
 
   const totals = result.totals[0];
+  const volume = totals ? countsFromRawGroup(totals, "volume") : ZERO_COUNTS;
+  const totalPosts = volume.positive + volume.negative + volume.neutral;
 
   return {
     byDate: result.by_date,
     impressions: totals ? countsFromRawGroup(totals, "impressions") : ZERO_COUNTS,
-    volume: totals ? countsFromRawGroup(totals, "volume") : ZERO_COUNTS,
+    volume,
     byCountry: result.by_country.map(countryBreakdownFromRawGroup),
     byChannel: result.by_channel.map(breakdownTotalFromRawGroup),
+    engagementRate:
+      totals && totalPosts > 0 ? (totals.engaged_count_sum / totalPosts) * 100 : 0,
+    uniqueAuthors: totals?.unique_authors_avg ?? 0,
   };
 }

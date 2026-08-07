@@ -143,6 +143,7 @@ function MirrorHalf({
   seriesName,
   seriesIcon,
   syncId,
+  onPointClick,
 }: {
   data: MirrorAreaChartPoint[];
   series: MirrorAreaChartSeries[];
@@ -152,6 +153,7 @@ function MirrorHalf({
   seriesName?: string;
   seriesIcon?: ReactNode;
   syncId: string;
+  onPointClick?: (point: MirrorAreaChartPoint) => void;
 }) {
   const gradientSuffix = reversed ? "bottom" : "top";
   const ticks = useMemo(
@@ -162,7 +164,20 @@ function MirrorHalf({
   return (
     <div style={{ height: HALF_HEIGHT }}>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={CHART_MARGIN} syncId={syncId}>
+        <AreaChart
+          data={data}
+          margin={CHART_MARGIN}
+          syncId={syncId}
+          onClick={(state) => {
+            // Recharts v3 doesn't hand back the clicked row itself, and
+            // `activeIndex` is a numeric *string* (`TooltipIndex`) despite
+            // its type saying `number` — matching by `activeLabel` against
+            // `xKey` sidesteps that entirely instead of parsing the index.
+            const point = data.find((row) => row[xKey] === state?.activeLabel);
+            if (point) onPointClick?.(point);
+          }}
+          style={{ cursor: onPointClick ? "pointer" : undefined }}
+        >
           <defs>
             {series.map(({ field, color }) => (
               <linearGradient
@@ -309,6 +324,7 @@ export function MirrorAreaChart({
   bottomLabel,
   topIcon,
   bottomIcon,
+  onPointClick,
 }: {
   top: MirrorAreaChartPoint[];
   bottom: MirrorAreaChartPoint[];
@@ -321,6 +337,9 @@ export function MirrorAreaChart({
   bottomLabel?: string;
   topIcon?: ReactNode;
   bottomIcon?: ReactNode;
+  /** Fires with the full data point (all series' values, plus `xKey`) for
+   * whichever date the user clicked, in either half. */
+  onPointClick?: (point: MirrorAreaChartPoint) => void;
 }) {
   const syncId = useId();
 
@@ -334,6 +353,7 @@ export function MirrorAreaChart({
         seriesName={topLabel}
         seriesIcon={topIcon}
         syncId={syncId}
+        onPointClick={onPointClick}
       />
       <MirrorAxis data={top} series={series} xKey={xKey} formatXTick={formatXTick} />
       <MirrorHalf
@@ -345,6 +365,7 @@ export function MirrorAreaChart({
         seriesName={bottomLabel}
         seriesIcon={bottomIcon}
         syncId={syncId}
+        onPointClick={onPointClick}
       />
     </div>
   );

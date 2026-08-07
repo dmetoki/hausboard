@@ -3,9 +3,13 @@ import { auth } from "@clerk/nextjs/server";
 
 const DATE_PATTERN = /^\d{8}$/;
 
-export function isValidCompactDate(value: unknown): value is string {
+function isValidCompactDate(value: unknown): value is string {
   return typeof value === "string" && DATE_PATTERN.test(value);
 }
+
+type ResolvedOrg =
+  | { ok: true; orgId: string }
+  | { ok: false; status: number; error: string };
 
 type ResolvedOrgAndDateRange =
   | { ok: true; orgId: string; from: string; to: string }
@@ -13,18 +17,15 @@ type ResolvedOrgAndDateRange =
 
 /**
  * Shared by every brand-reputation-area POST route: resolves `orgId` from
- * Clerk's session (with the dev-only body override), then validates
- * `date_range.from`/`date_range.to` as `YYYYMMDD` strings. Centralized so
- * every route enforces the exact same auth/validation rules instead of each
- * reimplementing (and potentially drifting from) the same checks.
+ * Clerk's session, with a dev-only body override so Postman/curl can
+ * exercise these routes without replicating Clerk session cookies. Strictly
+ * gated so a client-supplied org_id can never substitute for a real session
+ * in production.
  */
-export async function resolveOrgAndDateRange(
+async function resolveOrgId(
   body: Record<string, unknown> | null,
-): Promise<ResolvedOrgAndDateRange> {
+): Promise<ResolvedOrg> {
   const { orgId: sessionOrgId } = await auth();
-  // Dev-only convenience: lets Postman/curl exercise these routes without
-  // replicating Clerk session cookies. Strictly gated so a client-supplied
-  // org_id can never substitute for a real session in production.
   const devOrgId =
     process.env.NODE_ENV !== "production"
       ? (body?.org_id as string | undefined)
@@ -34,6 +35,21 @@ export async function resolveOrgAndDateRange(
   if (!orgId) {
     return { ok: false, status: 401, error: "No active organization" };
   }
+
+  return { ok: true, orgId };
+}
+
+/**
+ * `resolveOrgId` plus `date_range.from`/`date_range.to` validation as
+ * `YYYYMMDD` strings — for routes whose query is actually date-scoped.
+ * Centralized so every route enforces the exact same rules instead of each
+ * reimplementing (and potentially drifting from) the same checks.
+ */
+export async function resolveOrgAndDateRange(
+  body: Record<string, unknown> | null,
+): Promise<ResolvedOrgAndDateRange> {
+  const resolved = await resolveOrgId(body);
+  if (!resolved.ok) return resolved;
 
   const dateRange = body?.date_range as { from?: unknown; to?: unknown } | undefined;
   const from = dateRange?.from;
@@ -47,5 +63,5 @@ export async function resolveOrgAndDateRange(
     };
   }
 
-  return { ok: true, orgId, from, to };
+  return { ok: true, orgId: resolved.orgId, from, to };
 }

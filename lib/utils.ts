@@ -1,8 +1,21 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { Icons } from "@/components/icons"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+// The stored channel value doesn't always match the icon set's key (e.g.
+// Twitter's rebrand to X) — translated here, once, rather than forcing every
+// consumer (posts, authors) to know about the mismatch.
+const CHANNEL_ICON_KEY: Record<string, keyof typeof Icons> = {
+  twitter: "x",
+}
+
+export function channelIconKey(channel: string): keyof typeof Icons {
+  const mapped = CHANNEL_ICON_KEY[channel] ?? channel
+  return mapped in Icons ? (mapped as keyof typeof Icons) : "unknown"
 }
 
 // Shared across dashboard cards (mini/mirror/bar charts, user/post lists) so
@@ -69,7 +82,7 @@ export function sentimentLabelFromScore(score: number): string {
 // `numericId` is the ISO 3166-1 NUMERIC code for the same country — matches
 // the `id` field on each feature in the world-atlas topology `WorldMap`
 // renders, which has no alpha-2 field of its own to match against.
-export const COUNTRY_CODES = [
+const COUNTRY_CODES = [
   { countryCode: "US", countryName: "United States", numericId: "840" },
   { countryCode: "GB", countryName: "United Kingdom", numericId: "826" },
   { countryCode: "IN", countryName: "India", numericId: "356" },

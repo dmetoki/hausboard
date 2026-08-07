@@ -39,5 +39,7 @@ export async function POST(request: NextRequest) {
     volume: data.volume,
     by_country: data.byCountry,
     by_channel: data.byChannel,
+    engagement_rate: data.engagementRate,
+    unique_authors: data.uniqueAuthors,
   });
 }

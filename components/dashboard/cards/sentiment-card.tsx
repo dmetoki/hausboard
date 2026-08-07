@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { ChartNoAxesColumn, Layers } from "lucide-react";
 import { ChartCard } from "@/components/dashboard/chart-card";
 import { MirrorAreaChart, type MirrorAreaChartPoint } from "@/components/dashboard/charts/mirror-area-chart";
+import { SentimentPointSheet } from "@/components/dashboard/cards/sentiment-point-sheet";
 import { useBrandReputation } from "@/lib/use-brand-reputation";
 
 const SENTIMENT_SUBTITLE = "Positive vs. negative mentions";
@@ -13,6 +15,7 @@ function toIsoDate(published: string) {
 
 export function SentimentCard({ className }: { className?: string }) {
   const { byDate, seriesConfig, isLoading, error } = useBrandReputation();
+  const [selectedPoint, setSelectedPoint] = useState<MirrorAreaChartPoint | null>(null);
 
   const top: MirrorAreaChartPoint[] = byDate.map((day) => ({
     date: toIsoDate(day.published),
@@ -38,8 +41,16 @@ export function SentimentCard({ className }: { className?: string }) {
           bottomLabel="Volume"
           topIcon={<ChartNoAxesColumn className="size-3" />}
           bottomIcon={<Layers className="size-3" />}
+          onPointClick={setSelectedPoint}
         />
       )}
+      <SentimentPointSheet
+        point={selectedPoint}
+        series={seriesConfig}
+        onOpenChange={(open) => {
+          if (!open) setSelectedPoint(null);
+        }}
+      />
     </ChartCard>
   );
 }

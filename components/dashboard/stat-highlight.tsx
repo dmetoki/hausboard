@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 /**
  * A hero-number stat tile — for a single headline value with no meaningful
  * shape to plot (per the dataviz skill: sometimes the right chart is not a
@@ -8,7 +10,10 @@ export function StatHighlight({
   value,
   label,
 }: {
-  value: string;
+  /** Usually a plain string, but accepts composed JSX (e.g. a smaller
+   * trailing unit/suffix) — see callers that split a compact-formatted
+   * value into digits + suffix. */
+  value: ReactNode;
   label: string;
 }) {
   return (

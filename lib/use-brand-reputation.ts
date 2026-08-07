@@ -18,6 +18,8 @@ type BrandReputationResponse = {
   volume: SentimentCounts;
   by_country: CountryBreakdownTotal[];
   by_channel: BreakdownTotal[];
+  engagement_rate: number;
+  unique_authors: number;
 };
 
 function toCompactDate(isoDate: string) {
@@ -77,6 +79,8 @@ export function useBrandReputation() {
     volume: data?.volume,
     byCountry: data?.by_country ?? [],
     byChannel: data?.by_channel ?? [],
+    engagementRate: data?.engagement_rate,
+    uniqueAuthors: data?.unique_authors,
     // SWR's own `isLoading` isn't patched by `keepPreviousData` — it flips
     // true on every new key (i.e. every date range change) regardless of
     // whether `data` still holds the previous range's result. Gate on `data`

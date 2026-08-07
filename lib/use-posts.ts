@@ -5,9 +5,8 @@ import useSWR from "swr";
 import type { PostRow, PostsSortField } from "@/lib/posts";
 import type { PostTableRow } from "@/components/posts/columns";
 import type { SocialPost } from "@/components/dashboard/post-list";
-import { Icons } from "@/components/icons";
 import { useFilters } from "@/context/filters-context";
-import { titleCaseFromKebab } from "@/lib/utils";
+import { channelIconKey, titleCaseFromKebab } from "@/lib/utils";
 
 type PostsResponse = {
   posts: PostRow[];
@@ -27,22 +26,9 @@ type PostsFetchParams = {
   channels: string[];
 };
 
-export type UsePostsParams = PostsFetchParams;
 
 function toCompactDate(isoDate: string) {
   return isoDate.replaceAll("-", "");
-}
-
-// The stored channel value doesn't always match the icon set's key (e.g.
-// Twitter's rebrand to X) — translated here, once, rather than forcing every
-// consumer to know about the mismatch.
-const CHANNEL_ICON_KEY: Record<string, keyof typeof Icons> = {
-  twitter: "x",
-};
-
-function channelIconKey(channel: string): keyof typeof Icons {
-  const mapped = CHANNEL_ICON_KEY[channel] ?? channel;
-  return mapped in Icons ? (mapped as keyof typeof Icons) : "unknown";
 }
 
 // The legacy mentions collection has no country data yet — fixed placeholder
@@ -156,7 +142,7 @@ function usePostsFetch(params: PostsFetchParams) {
   };
 }
 
-export function usePosts(params: UsePostsParams) {
+export function usePosts(params: PostsFetchParams) {
   const { data, error, isLoading } = usePostsFetch(params);
 
   return {

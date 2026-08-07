@@ -1,21 +1,17 @@
 import type { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
 import { ChartCard } from "@/components/dashboard/chart-card";
-import { StatHighlight } from "@/components/dashboard/stat-highlight";
+import { HighlightMetricsRow } from "@/components/dashboard/cards/highlight-metrics-row";
 import { SentimentCard } from "@/components/dashboard/cards/sentiment-card";
 import { SentimentDonutCard } from "@/components/dashboard/cards/sentiment-donut-card";
 import { SentimentByChannelCard } from "@/components/dashboard/cards/sentiment-by-channel-card";
 import { SentimentByCountryCard } from "@/components/dashboard/cards/sentiment-by-country-card";
 import { RecentPostsCard } from "@/components/dashboard/cards/recent-posts-card";
-import { UserList } from "@/components/dashboard/user-list";
+import { TopAuthorsCard } from "@/components/dashboard/cards/top-authors-card";
 import { NarrativeSummary } from "@/components/dashboard/narrative-summary";
 import { SentimentCountryScoreCard } from "@/components/dashboard/cards/sentiment-country-score-card";
 import { SentimentWorldMapCard } from "@/components/dashboard/cards/sentiment-world-map-card";
-import {
-  generateMockUsers,
-  HIGHLIGHT_METRICS,
-  MOCK_NARRATIVE_SUMMARY,
-} from "@/lib/mock-metrics";
+import { MOCK_NARRATIVE_SUMMARY } from "@/lib/mock-metrics";
 
 export const metadata: Metadata = {
   title: "Brand Reputation",
@@ -38,7 +34,7 @@ type CardDescriptor =
 // explicit about what it is and how wide it spans, so adding/removing/
 // reordering a card can't silently desync from a positional row/column
 // lookup elsewhere. The highlight tiles are the one exception: they're a
-// fixed final row rendered separately below (see HIGHLIGHT_METRICS.map at
+// fixed final row rendered separately below (see `HighlightMetricsRow` at
 // the bottom of the component), since on mobile they need their own 2-column
 // sub-grid rather than the single-column stacking every other card gets.
 const CARDS: CardDescriptor[] = [
@@ -73,16 +69,7 @@ export default async function BrandReputationPage() {
             return <RecentPostsCard key={i} className={className} />;
 
           case "authors":
-            return (
-              <ChartCard
-                key={i}
-                className={className}
-                title="Top Authors"
-                description="Most followed authors this period"
-              >
-                <UserList users={generateMockUsers("top-authors")} />
-              </ChartCard>
-            );
+            return <TopAuthorsCard key={i} className={className} />;
 
           case "sentiment-by-channel":
             return <SentimentByChannelCard key={i} className={className} />;
@@ -133,11 +120,7 @@ export default async function BrandReputationPage() {
           children rejoin the outer 4-column grid directly, unchanged from
           before. */}
       <div className="grid grid-cols-2 gap-4 md:contents">
-        {HIGHLIGHT_METRICS.map((highlight) => (
-          <ChartCard key={highlight.label} className="col-span-1" centerContent>
-            <StatHighlight value={highlight.value} label={highlight.label} />
-          </ChartCard>
-        ))}
+        <HighlightMetricsRow />
       </div>
     </div>
   );
